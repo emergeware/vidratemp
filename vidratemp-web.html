@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIDRATEMP · Vitrotemp Ltda.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --filo:#1E8E7E;        /* canto del vidrio float */
+  --filo-osc:#12655A;
+  --casco:#0C2229;       /* estructura / barra lateral */
+  --casco-2:#123039;
+  --horno:#D9702B;       /* calor, temple */
+  --rotura:#B23A2F;
+  --papel:#EFF3F3;
+  --panel:#FFFFFF;
+  --linea:#D2DBDB;
+  --linea-fuerte:#B4C1C1;
+  --tinta:#13252B;
+  --tinta-2:#5A6E73;
+  --sombra:0 1px 0 rgba(19,37,43,.06);
+  --r:3px;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --papel:#0E1C21; --panel:#132A31; --linea:#23414A; --linea-fuerte:#33555F;
+    --tinta:#E6EFEF; --tinta-2:#93A8AD; --sombra:0 1px 0 rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --papel:#0E1C21; --panel:#132A31; --linea:#23414A; --linea-fuerte:#33555F;
+  --tinta:#E6EFEF; --tinta-2:#93A8AD;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papel); color:var(--tinta);
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:14px; line-height:1.45; font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--filo)}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- INGRESO ---------- */
+#ingreso{position:fixed;inset:0;background:var(--casco);display:grid;grid-template-columns:1.15fr .85fr;z-index:50}
+#ingreso .marca{position:relative;padding:44px 48px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+#ingreso .marca svg.plano{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+#ingreso .marca > *{position:relative}
+.logo{display:flex;align-items:baseline;gap:10px;color:#fff}
+.logo b{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.logo span{font-family:'Archivo Narrow';font-size:13px;color:#7FB0AC}
+#ingreso h1{color:#fff;font-size:40px;line-height:1.05;max-width:11ch;font-weight:600}
+#ingreso h1 em{font-style:normal;color:#57C7B4}
+#ingreso .pie{color:#6E9198;font-family:'Archivo Narrow';font-size:13px;max-width:46ch}
+#ingreso .acceso{background:var(--panel);padding:48px 44px;display:flex;flex-direction:column;justify-content:center;gap:18px}
+#ingreso .acceso h2{font-size:20px}
+#ingreso .acceso p{margin:0;color:var(--tinta-2);font-size:13px}
+.campo{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.campo label{font-size:12px;color:var(--tinta-2);font-family:'Archivo Narrow'}
+.campo input,.campo select,.campo textarea{
+  border:1px solid var(--linea-fuerte);background:var(--panel);border-radius:var(--r);
+  padding:9px 10px;outline:none;width:100%
+}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--filo);box-shadow:0 0 0 3px rgba(30,142,126,.16)}
+.usuarios{display:flex;flex-direction:column;gap:6px;margin:4px 0 14px}
+.usuario{display:flex;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--linea);border-radius:var(--r);background:transparent;text-align:left}
+.usuario:hover{border-color:var(--filo)}
+.usuario.on{border-color:var(--filo);background:rgba(30,142,126,.08)}
+.usuario .av{width:30px;height:30px;border-radius:2px;background:var(--casco);color:#57C7B4;display:grid;place-items:center;font-size:12px;font-weight:600}
+.usuario small{display:block;color:var(--tinta-2);font-size:12px;font-family:'Archivo Narrow'}
+.btn{border:1px solid transparent;border-radius:var(--r);padding:9px 14px;font-weight:600;font-size:13px;background:var(--filo);color:#fff}
+.btn:hover{background:var(--filo-osc)}
+.btn.sec{background:transparent;border-color:var(--linea-fuerte);color:var(--tinta)}
+.btn.sec:hover{border-color:var(--filo);color:var(--filo)}
+.btn.calor{background:var(--horno)}
+.btn.chico{padding:5px 9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- ESTRUCTURA ---------- */
+#app{display:none;min-height:100vh;grid-template-columns:216px 1fr}
+#app.on{display:grid}
+aside{background:var(--casco);color:#C7D9DB;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+aside .cab{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+aside nav{flex:1;overflow-y:auto;padding:10px 8px}
+aside .grupo{font-family:'Archivo Narrow';font-size:11px;color:#5E8189;padding:12px 10px 5px}
+aside a{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);color:#C7D9DB;text-decoration:none;font-size:13.5px;border-left:2px solid transparent}
+aside a:hover{background:rgba(255,255,255,.05)}
+aside a.on{background:rgba(87,199,180,.12);color:#fff;border-left-color:#57C7B4}
+aside a .ic{width:16px;text-align:center;opacity:.85}
+aside a .bad{margin-left:auto;background:var(--horno);color:#fff;font-size:11px;border-radius:9px;padding:0 6px;font-weight:600}
+aside .usr{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:9px;align-items:center;font-size:13px}
+aside .usr small{display:block;color:#6E9198;font-size:11.5px}
+aside .usr button{margin-left:auto;background:none;border:none;color:#6E9198;font-size:16px}
+
+main{min-width:0;display:flex;flex-direction:column}
+header.barra{display:flex;align-items:center;gap:16px;padding:0 22px;height:56px;background:var(--panel);border-bottom:1px solid var(--linea);position:sticky;top:0;z-index:20}
+header.barra h2{font-size:16px}
+header.barra .ruta{color:var(--tinta-2);font-family:'Archivo Narrow';font-size:12.5px}
+header.barra .der{margin-left:auto;display:flex;align-items:center;gap:14px}
+.medidor{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tinta-2);font-family:'Archivo Narrow'}
+.barrita{width:78px;height:6px;background:var(--linea);border-radius:3px;overflow:hidden}
+.barrita i{display:block;height:100%;background:var(--filo)}
+.barrita i.alto{background:var(--horno)}
+.barrita i.lleno{background:var(--rotura)}
+.contenido{padding:22px;max-width:1480px;width:100%}
+
+/* ---------- PIEZAS ---------- */
+.tarjetas{display:grid;gap:14px}
+.k4{grid-template-columns:repeat(4,1fr)}
+.k3{grid-template-columns:repeat(3,1fr)}
+.k2{grid-template-columns:repeat(2,1fr)}
+.caja{background:var(--panel);border:1px solid var(--linea);border-radius:var(--r);box-shadow:var(--sombra)}
+.caja > h3{padding:13px 16px;border-bottom:1px solid var(--linea);font-size:14px;display:flex;align-items:center;gap:10px}
+.caja > h3 .acc{margin-left:auto;display:flex;gap:8px}
+.caja .cuerpo{padding:16px}
+.kpi{padding:14px 16px}
+.kpi .rot{font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2)}
+.kpi .val{font-size:27px;font-weight:600;letter-spacing:-.02em;margin-top:2px}
+.kpi .val small{font-size:14px;font-weight:500;color:var(--tinta-2)}
+.kpi .var{font-size:12px;margin-top:3px;font-family:'Archivo Narrow'}
+.sube{color:var(--filo)} .baja{color:var(--rotura)}
+.kpi.calor{border-top:2px solid var(--horno)}
+.kpi.frio{border-top:2px solid var(--filo)}
+
+table{width:100%;border-collapse:collapse;font-family:'Archivo Narrow';font-size:13.5px}
+th{text-align:left;font-weight:600;color:var(--tinta-2);padding:8px 12px;border-bottom:1px solid var(--linea);white-space:nowrap;font-size:12.5px}
+td{padding:9px 12px;border-bottom:1px solid var(--linea);vertical-align:middle}
+tbody tr:hover{background:rgba(30,142,126,.05)}
+td.der,th.der{text-align:right}
+.eti{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-family:'Archivo Narrow';font-weight:600;padding:2px 7px;border-radius:2px;border:1px solid}
+.e-ok{color:var(--filo-osc);border-color:rgba(30,142,126,.4);background:rgba(30,142,126,.1)}
+.e-cal{color:#9C4D14;border-color:rgba(217,112,43,.45);background:rgba(217,112,43,.12)}
+.e-mal{color:var(--rotura);border-color:rgba(178,58,47,.4);background:rgba(178,58,47,.1)}
+.e-gris{color:var(--tinta-2);border-color:var(--linea-fuerte);background:transparent}
+.punto{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+
+.fila{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.fila > *{flex:1;min-width:110px}
+.fila .fijo{flex:0 0 auto;min-width:0}
+.aviso{display:flex;gap:10px;padding:11px 13px;border:1px solid var(--linea);border-left:3px solid var(--horno);border-radius:var(--r);background:var(--panel);align-items:flex-start;margin-bottom:10px}
+.aviso.rojo{border-left-color:var(--rotura)}
+.aviso.verde{border-left-color:var(--filo)}
+.aviso b{font-size:13px}
+.aviso p{margin:2px 0 0;font-size:12.5px;color:var(--tinta-2);font-family:'Archivo Narrow'}
+.aviso .btn{margin-left:auto;flex:0 0 auto}
+.vacio{padding:34px;text-align:center;color:var(--tinta-2);font-family:'Archivo Narrow'}
+.pestanas{display:flex;gap:2px;border-bottom:1px solid var(--linea);margin-bottom:16px}
+.pestanas button{background:none;border:none;padding:9px 14px;color:var(--tinta-2);border-bottom:2px solid transparent;font-size:13.5px}
+.pestanas button.on{color:var(--tinta);border-bottom-color:var(--filo);font-weight:600}
+.malla-lin{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-family:'Archivo Narrow';font-size:13.5px}
+.malla-lin dt{color:var(--tinta-2)}
+.malla-lin dd{margin:0;text-align:right;font-weight:500}
+
+/* ---------- PLANO DE CORTE ---------- */
+.plano{background:var(--panel);border:1px solid var(--linea);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.plano .cab{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.plano .cab h4{font-size:14px}
+.plano svg{width:100%;height:auto;display:block;background:repeating-linear-gradient(45deg,transparent,transparent 9px,rgba(19,37,43,.03) 9px,rgba(19,37,43,.03) 10px)}
+.pieza{fill:rgba(30,142,126,.18);stroke:var(--filo-osc);stroke-width:4}
+.pieza.tpl{fill:rgba(217,112,43,.18);stroke:#A8531A}
+.sobra{fill:rgba(19,37,43,.05);stroke:var(--linea-fuerte);stroke-width:2;stroke-dasharray:14 10}
+.sobra.util{fill:rgba(87,199,180,.12);stroke:var(--filo);stroke-dasharray:none}
+.cota{stroke:var(--tinta-2);stroke-width:2}
+.txt{font-family:'Archivo Narrow';fill:var(--tinta);font-size:34px}
+.txt.min{font-size:26px;fill:var(--tinta-2)}
+
+/* ---------- TRAZA / LINEA DE TIEMPO ---------- */
+.traza{display:flex;flex-direction:column;gap:0}
+.paso{display:grid;grid-template-columns:26px 1fr;gap:12px;padding-bottom:16px;position:relative}
+.paso:not(:last-child):before{content:'';position:absolute;left:12px;top:22px;bottom:0;width:2px;background:var(--linea)}
+.paso.hecho:not(:last-child):before{background:var(--filo)}
+.paso .bolita{width:24px;height:24px;border-radius:50%;border:2px solid var(--linea);background:var(--panel);display:grid;place-items:center;font-size:12px;z-index:1}
+.paso.hecho .bolita{background:var(--filo);border-color:var(--filo);color:#fff}
+.paso.activo .bolita{border-color:var(--horno);background:var(--horno);color:#fff}
+.paso b{font-size:13.5px}
+.paso span{display:block;font-size:12.5px;color:var(--tinta-2);font-family:'Archivo Narrow'}
+
+/* ---------- CHAT ---------- */
+.chat{height:440px;overflow-y:auto;padding:16px;background:var(--papel);display:flex;flex-direction:column;gap:9px}
+.msj{max-width:74%;padding:8px 11px;border-radius:9px;font-size:13.5px;white-space:pre-wrap;line-height:1.5}
+.msj.cli{background:var(--panel);border:1px solid var(--linea);align-self:flex-start;border-bottom-left-radius:2px}
+.msj.bot{background:#DCF3EC;border:1px solid rgba(30,142,126,.3);align-self:flex-end;border-bottom-right-radius:2px;color:#0F3B35}
+.chat .hora{font-size:11px;color:var(--tinta-2);font-family:'Archivo Narrow';display:block;margin-top:3px}
+
+/* ---------- MODAL ---------- */
+.telon{position:fixed;inset:0;background:rgba(12,34,41,.55);display:none;place-items:center;z-index:60;padding:20px}
+.telon.on{display:grid}
+.modal{background:var(--panel);border-radius:var(--r);max-width:760px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 18px 50px rgba(12,34,41,.35)}
+.modal h3{padding:14px 18px;border-bottom:1px solid var(--linea);display:flex;align-items:center}
+.modal h3 button{margin-left:auto;background:none;border:none;font-size:19px;color:var(--tinta-2)}
+.modal .cuerpo{padding:18px}
+pre.codigo{background:var(--casco);color:#9FE8D8;padding:13px;border-radius:var(--r);overflow:auto;max-height:300px;font-size:12px;font-family:ui-monospace,monospace;line-height:1.5}
+.aviso-flot{position:fixed;right:20px;bottom:20px;background:var(--casco);color:#fff;padding:12px 16px;border-radius:var(--r);box-shadow:0 8px 24px rgba(12,34,41,.3);z-index:80;font-size:13.5px;border-left:3px solid #57C7B4;max-width:330px;opacity:0;transform:translateY(8px);transition:.2s}
+.aviso-flot.on{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:1100px){.k4{grid-template-columns:repeat(2,1fr)}.k3{grid-template-columns:1fr 1fr}}
+@media (max-width:860px){
+  #ingreso{grid-template-columns:1fr}#ingreso .marca{display:none}
+  #app.on{grid-template-columns:1fr}
+  aside{position:fixed;left:-220px;transition:.2s;z-index:40;width:216px}
+  aside.abierta{left:0}
+  .k4,.k3,.k2{grid-template-columns:1fr}
+  .tablon{overflow-x:auto}
+}
+.menu-movil{display:none;background:none;border:none;font-size:19px}
+@media (max-width:860px){.menu-movil{display:block}}
+</style>
+</head>
+<body>
+
+<!-- ===================== INGRESO ===================== -->
+<section id="ingreso">
+  <div class="marca">
+    <svg class="plano" viewBox="0 0 700 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g stroke="#1E8E7E" fill="none" stroke-width="1.2" opacity=".55">
+        <rect x="60" y="60" width="580" height="380"/>
+        <rect x="70" y="70" width="240" height="170" fill="rgba(87,199,180,.08)"/>
+        <rect x="320" y="70" width="150" height="170" fill="rgba(87,199,180,.05)"/>
+        <rect x="480" y="70" width="150" height="110" fill="rgba(87,199,180,.05)"/>
+        <rect x="70" y="250" width="180" height="180" fill="rgba(87,199,180,.08)"/>
+        <rect x="260" y="250" width="210" height="90" fill="rgba(87,199,180,.05)"/>
+        <rect x="260" y="350" width="210" height="80"/>
+        <rect x="480" y="190" width="150" height="240" stroke-dasharray="6 5"/>
+      </g>
+      <g fill="#57C7B4" font-family="Archivo Narrow" font-size="11" opacity=".75">
+        <text x="76" y="86">1200 × 800</text><text x="326" y="86">750 × 800</text>
+        <text x="486" y="86">750 × 520</text><text x="76" y="266">900 × 900</text>
+        <text x="266" y="266">1050 × 430</text><text x="486" y="206">retazo</text>
+      </g>
+    </svg>
+    <div class="logo"><b>VIDRATEMP</b><span>Vitrotemp Ltda. · La Paz</span></div>
+    <h1>Del contenedor<br>al <em>vidrio templado</em>,<br>en un solo sistema.</h1>
+    <p class="pie">Importación · Almacén · Corte optimizado · Retazos · Temple · Aluminio · Caja. Trazabilidad por pieza y compromisos de entrega que sí se cumplen.</p>
+  </div>
+  <div class="acceso">
+    <div>
+      <h2>Ingresar al sistema</h2>
+      <p>Elija su usuario de demostración. Cada rol ve únicamente lo que necesita.</p>
+    </div>
+    <div class="usuarios" id="listaUsuarios"></div>
+    <div class="campo"><label for="clave">Contraseña</label><input id="clave" type="password" value="demo1234"></div>
+    <button class="btn" onclick="entrar()">Ingresar</button>
+    <p style="font-size:12px">Demostración con datos simulados · v1.0</p>
+  </div>
+</section>
+
+<!-- ===================== APLICACIÓN ===================== -->
+<div id="app">
+  <aside id="lateral">
+    <div class="cab"><div class="logo"><b style="font-size:19px">VIDRATEMP</b></div>
+      <div style="font-family:'Archivo Narrow';font-size:11.5px;color:#5E8189;margin-top:2px">Vitrotemp Ltda. · La Paz</div>
+    </div>
+    <nav id="menu"></nav>
+    <div class="usr" id="usrPie"></div>
+  </aside>
+  <main>
+    <header class="barra">
+      <button class="menu-movil" onclick="document.getElementById('lateral').classList.toggle('abierta')">☰</button>
+      <div><h2 id="tituloVista">Panel</h2><div class="ruta" id="rutaVista"></div></div>
+      <div class="der">
+        <div class="medidor" title="Capacidad de temple comprometida para hoy">
+          Temple hoy <div class="barrita"><i id="medHorno" style="width:0"></i></div><span id="medHornoTxt"></span>
+        </div>
+        <div class="medidor" title="Entregas comprometidas para hoy">
+          Entregas <div class="barrita"><i id="medEnt" style="width:0"></i></div><span id="medEntTxt"></span>
+        </div>
+      </div>
+    </header>
+    <div class="contenido" id="vista"></div>
+  </main>
+</div>
+
+<div class="telon" id="telon" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal"><h3 id="modalTit">Detalle<button onclick="cerrarModal()">✕</button></h3><div class="cuerpo" id="modalCuerpo"></div></div>
+</div>
+<div class="aviso-flot" id="toast"></div>
+
+<script>
+/* ============================================================
+   VIDRATEMP · núcleo de datos (demostración)
+   ============================================================ */
+const BS = n => 'Bs ' + (Math.round(n*100)/100).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+const M2 = n => (Math.round(n*1000)/1000).toFixed(3).replace('.',',') + ' m²';
+const NUM = (n,d=0) => Number(n).toLocaleString('es-BO',{minimumFractionDigits:d,maximumFractionDigits:d});
+const HOY = new Date('2026-09-18T09:40:00');
+const fecha = d => new Date(d).toLocaleDateString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric'});
+const fechaCorta = d => new Date(d).toLocaleDateString('es-BO',{day:'2-digit',month:'short'});
+const hora = d => new Date(d).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
+const masHoras = (d,h) => new Date(new Date(d).getTime()+h*3600000);
+const uid = p => p + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
+
+/* --- Parámetros de planta --- */
+const PLANTA = {
+  chapa:{ancho:3300,alto:2140},          // mm, medida estándar importada
+  kerf:5,                                 // mm de pérdida por corte
+  margen:10,                              // mm de refile de borde
+  hornoUtil:{ancho:2440,alto:1600},       // mm, cama del horno vertical
+  espesorMaxTemple:8,                     // mm
+  capacidad:{temple:62, corte:145, entregas:34}, // m²/día, m²/día, pedidos/día
+  retazoMin:{ancho:250,alto:250},          // mm, por debajo es merma
+  moneda:'Bs', tipoCambio:6.96
+};
+
+/* --- Usuarios / roles --- */
+const USUARIOS = [
+  {id:'jg', nom:'Javier Guibarra', rol:'Dueño', cargo:'Dirección general', ini:'JG', vistas:'*'},
+  {id:'mq', nom:'Mariela Quispe', rol:'Ventas', cargo:'Mostrador y WhatsApp', ini:'MQ',
+   vistas:['panel','cotizador','pedidos','clientes','asistente','agenda']},
+  {id:'jc', nom:'Julio Condori', rol:'Producción', cargo:'Maestro vidriero', ini:'JC',
+   vistas:['panel','optimizador','retazos','produccion','horno','agenda']},
+  {id:'ea', nom:'Elena Apaza', rol:'Almacén', cargo:'Depósito de importación', ini:'EA',
+   vistas:['panel','inventario','importaciones','retazos']},
+  {id:'fm', nom:'Freddy Mamani', rol:'Administración', cargo:'Caja y contabilidad', ini:'FM',
+   vistas:['panel','caja','pedidos','clientes','personal','reportes']}
+];
+
+/* --- Catálogo de vidrio --- */
+const CATALOGO = [
+  {cod:'FL04I',nom:'Float incoloro 4 mm',esp:4,fam:'Float',color:'Incoloro',precio:98,templable:true,vid:26,alm:164,min:20,ubic:'V-A1'},
+  {cod:'FL05I',nom:'Float incoloro 5 mm',esp:5,fam:'Float',color:'Incoloro',precio:121,templable:true,vid:18,alm:210,min:20,ubic:'V-A2'},
+  {cod:'FL06I',nom:'Float incoloro 6 mm',esp:6,fam:'Float',color:'Incoloro',precio:148,templable:true,vid:31,alm:248,min:24,ubic:'V-A3'},
+  {cod:'FL08I',nom:'Float incoloro 8 mm',esp:8,fam:'Float',color:'Incoloro',precio:212,templable:true,vid:9,alm:132,min:16,ubic:'V-A4'},
+  {cod:'FL06B',nom:'Float bronce 6 mm',esp:6,fam:'Float',color:'Bronce',precio:172,templable:true,vid:12,alm:88,min:10,ubic:'V-B1'},
+  {cod:'FL06G',nom:'Float gris 6 mm',esp:6,fam:'Float',color:'Gris',precio:169,templable:true,vid:7,alm:74,min:10,ubic:'V-B2'},
+  {cod:'RF06P',nom:'Reflectivo plata 6 mm',esp:6,fam:'Reflectivo',color:'Plata',precio:236,templable:true,vid:5,alm:28,min:8,ubic:'V-B3'},
+  {cod:'LM33I',nom:'Laminado 3+3 incoloro',esp:6,fam:'Laminado',color:'Incoloro',precio:318,templable:false,vid:8,alm:52,min:8,ubic:'V-C1'},
+  {cod:'ES04I',nom:'Espejo 4 mm',esp:4,fam:'Espejo',color:'Plata',precio:178,templable:false,vid:14,alm:60,min:10,ubic:'V-C2'},
+  {cod:'FL10I',nom:'Float incoloro 10 mm',esp:10,fam:'Float',color:'Incoloro',precio:298,templable:false,vid:4,alm:22,min:4,ubic:'V-C3'}
+];
+const catPorCod = c => CATALOGO.find(x=>x.cod===c);
+
+/* --- Procesos y tarifas --- */
+const PROCESOS = [
+  {cod:'pulido',nom:'Pulido de canto',unidad:'ml',precio:19,desc:'Canto pulido brillante, obligatorio antes del temple'},
+  {cod:'bisel',nom:'Biselado 20 mm',unidad:'ml',precio:52,desc:'Bisel decorativo para espejos y mesas'},
+  {cod:'temple',nom:'Templado',unidad:'m²',precio:96,desc:'Horno vertical · máx. 8 mm · 2440 × 1600 mm'},
+  {cod:'perf',nom:'Perforación',unidad:'un',precio:26,desc:'Ø 8 a 50 mm, antes del temple'},
+  {cod:'entalle',nom:'Entalle / muesca',unidad:'un',precio:38,desc:'Cortes para herrajes de box y puertas'},
+  {cod:'arenado',nom:'Arenado',unidad:'m²',precio:64,desc:'Acabado esmerilado total o con plantilla'}
+];
+const MIN_FACTURABLE = 0.25;    // m² por pieza
+const RECARGO_URGENTE = 0.22;   // 22 % por entrega prioritaria
+
+/* --- Perfilería de aluminio --- */
+const ALUMINIO = [
+  {cod:'A25-MAR',nom:'Serie 25 · marco corredizo',linea:'Serie 25',acab:'Natural',precio:52,barras:78,min:40,peso:1.12},
+  {cod:'A25-HOJ',nom:'Serie 25 · hoja corrediza',linea:'Serie 25',acab:'Natural',precio:48,barras:64,min:40,peso:0.98},
+  {cod:'A25-BLA',nom:'Serie 25 · marco blanco',linea:'Serie 25',acab:'Blanco',precio:61,barras:22,min:30,peso:1.12},
+  {cod:'A38-MAR',nom:'Serie 3831 · marco abrir',linea:'Serie 3831',acab:'Natural',precio:74,barras:36,min:24,peso:1.46},
+  {cod:'BOX-U',nom:'Perfil U para box',linea:'Box',acab:'Cromado',precio:88,barras:19,min:20,peso:0.86},
+  {cod:'BOX-H',nom:'Kit herrajes box corredizo',linea:'Box',acab:'Cromado',precio:340,barras:12,min:10,peso:2.4},
+  {cod:'A25-JUN',nom:'Junquillo Serie 25',linea:'Serie 25',acab:'Natural',precio:19,barras:96,min:50,peso:0.34}
+];
+
+/* --- Clientes --- */
+const CLIENTES = [
+  {id:'C-001',nom:'Aluminios del Sur S.R.L.',tipo:'Mayorista',tel:'+591 7 6543 210',zona:'Villa Fátima',credito:24000,saldo:8420,compras:186400},
+  {id:'C-002',nom:'Constructora Illimani',tipo:'Corporativo',tel:'+591 7 1122 334',zona:'Calacoto',credito:60000,saldo:31200,compras:412700},
+  {id:'C-003',nom:'Box & Baños La Paz',tipo:'Mayorista',tel:'+591 6 9988 776',zona:'Miraflores',credito:15000,saldo:0,compras:98300},
+  {id:'C-004',nom:'Arq. Daniela Rojas',tipo:'Minorista',tel:'+591 7 3344 556',zona:'Achumani',credito:0,saldo:0,compras:24800},
+  {id:'C-005',nom:'Vidriería El Alto Center',tipo:'Mayorista',tel:'+591 7 7788 990',zona:'El Alto',credito:18000,saldo:5600,compras:141900},
+  {id:'C-006',nom:'Hotel Presidente',tipo:'Corporativo',tel:'+591 2 2406 666',zona:'Centro',credito:30000,saldo:12400,compras:76500},
+  {id:'C-007',nom:'Sr. Marco Villca',tipo:'Minorista',tel:'+591 7 2233 445',zona:'Sopocachi',credito:0,saldo:0,compras:6200}
+];
+
+/* --- Etapas del pedido --- */
+const ETAPAS = ['Cotizado','Confirmado','Corte','Pulido','Lavado','Temple','Control de calidad','Listo para entrega','Entregado'];
+const ETAPA_ICONO = {'Cotizado':'◷','Confirmado':'✓','Corte':'✂','Pulido':'◇','Lavado':'≈','Temple':'♨','Control de calidad':'◉','Listo para entrega':'▣','Entregado':'★'};
+
+/* --- Pedidos --- */
+const PEDIDOS = [
+  {id:'PD-2609',cli:'C-002',vend:'mq',etapa:'Temple',creado:'2026-09-17T09:12',entrega:'2026-09-18T16:00',total:14860,m2:38.4,urgente:false,
+   piezas:[{cat:'FL08I',a:1200,b:2100,c:6,proc:['pulido','temple'],desc:'Puerta de vidrio hall'},{cat:'FL08I',a:900,b:2100,c:4,proc:['pulido','temple','perf'],desc:'Fijo lateral'}]},
+  {id:'PD-2610',cli:'C-001',vend:'mq',etapa:'Corte',creado:'2026-09-17T14:40',entrega:'2026-09-19T11:00',total:6240,m2:19.8,urgente:false,
+   piezas:[{cat:'FL06I',a:1400,b:800,c:12,proc:['pulido'],desc:'Ventana corrediza'},{cat:'FL06I',a:600,b:800,c:12,proc:['pulido'],desc:'Hoja fija'}]},
+  {id:'PD-2611',cli:'C-003',vend:'mq',etapa:'Control de calidad',creado:'2026-09-16T10:05',entrega:'2026-09-18T12:00',total:9380,m2:16.2,urgente:true,
+   piezas:[{cat:'FL08I',a:700,b:1900,c:8,proc:['pulido','temple','entalle'],desc:'Hoja de box'}]},
+  {id:'PD-2612',cli:'C-005',vend:'mq',etapa:'Confirmado',creado:'2026-09-18T08:20',entrega:'2026-09-20T15:00',total:4120,m2:12.6,urgente:false,
+   piezas:[{cat:'ES04I',a:900,b:600,c:14,proc:['bisel'],desc:'Espejo biselado baño'}]},
+  {id:'PD-2613',cli:'C-006',vend:'mq',etapa:'Listo para entrega',creado:'2026-09-15T16:30',entrega:'2026-09-18T10:00',total:22400,m2:44.1,urgente:false,
+   piezas:[{cat:'RF06P',a:1500,b:2000,c:10,proc:['pulido','temple'],desc:'Fachada reflectivo'}]},
+  {id:'PD-2614',cli:'C-004',vend:'mq',etapa:'Cotizado',creado:'2026-09-18T09:05',entrega:'2026-09-22T14:00',total:3180,m2:7.2,urgente:false,
+   piezas:[{cat:'LM33I',a:1200,b:1000,c:6,proc:['pulido'],desc:'Baranda laminado'}]},
+  {id:'PD-2607',cli:'C-001',vend:'mq',etapa:'Entregado',creado:'2026-09-12T11:00',entrega:'2026-09-15T10:00',total:18900,m2:41.0,urgente:false,
+   piezas:[{cat:'FL06I',a:1800,b:1200,c:19,proc:['pulido','temple'],desc:'Divisorias oficina'}]},
+  {id:'PD-2608',cli:'C-007',vend:'mq',etapa:'Entregado',creado:'2026-09-14T15:20',entrega:'2026-09-16T17:00',total:1420,m2:3.1,urgente:false,
+   piezas:[{cat:'FL04I',a:800,b:600,c:8,proc:[],desc:'Vidrio simple ventana'}]}
+];
+
+/* --- Retazos en depósito de sobras --- */
+const RETAZOS = [
+  {id:'RZ-0341',cat:'FL06I',a:1480,b:920,ubic:'S-A-03',origen:'PD-2601',fecha:'2026-09-10',estado:'Disponible'},
+  {id:'RZ-0342',cat:'FL06I',a:980,b:760,ubic:'S-A-03',origen:'PD-2601',fecha:'2026-09-10',estado:'Disponible'},
+  {id:'RZ-0347',cat:'FL08I',a:1620,b:1180,ubic:'S-B-01',origen:'PD-2604',fecha:'2026-09-12',estado:'Disponible'},
+  {id:'RZ-0349',cat:'FL08I',a:840,b:620,ubic:'S-B-02',origen:'PD-2604',fecha:'2026-09-12',estado:'Disponible'},
+  {id:'RZ-0352',cat:'FL04I',a:2100,b:640,ubic:'S-A-01',origen:'PD-2605',fecha:'2026-09-13',estado:'Disponible'},
+  {id:'RZ-0355',cat:'FL05I',a:1260,b:1100,ubic:'S-A-05',origen:'PD-2606',fecha:'2026-09-14',estado:'Disponible'},
+  {id:'RZ-0356',cat:'ES04I',a:1440,b:820,ubic:'S-C-02',origen:'PD-2606',fecha:'2026-09-14',estado:'Disponible'},
+  {id:'RZ-0358',cat:'FL06B',a:1180,b:900,ubic:'S-B-04',origen:'PD-2607',fecha:'2026-09-15',estado:'Disponible'},
+  {id:'RZ-0361',cat:'FL06I',a:660,b:540,ubic:'S-A-04',origen:'PD-2608',fecha:'2026-09-16',estado:'Disponible'},
+  {id:'RZ-0362',cat:'FL08I',a:2240,b:780,ubic:'S-B-01',origen:'PD-2609',fecha:'2026-09-17',estado:'Disponible'},
+  {id:'RZ-0363',cat:'LM33I',a:1520,b:980,ubic:'S-C-01',origen:'PD-2609',fecha:'2026-09-17',estado:'Reservado'},
+  {id:'RZ-0364',cat:'FL05I',a:820,b:700,ubic:'S-A-05',origen:'PD-2610',fecha:'2026-09-17',estado:'Disponible'}
+];
+
+/* --- Importaciones --- */
+const IMPORTACIONES = [
+  {oc:'OC-2026-019',prov:'Xinyi Glass · Shenzhen',contenedor:'MSKU 774213-1',etapa:'En almacén',embarque:'2026-07-02',eta:'2026-09-10',valor:214600,
+   items:[{cat:'FL06I',cant:180,recibido:180,roto:2},{cat:'FL08I',cant:120,recibido:120,roto:1},{cat:'FL04I',cant:160,recibido:160,roto:0}]},
+  {oc:'OC-2026-021',prov:'Sanxin Glass · Guangzhou',contenedor:'TCLU 998106-4',etapa:'Aduana La Paz',embarque:'2026-07-28',eta:'2026-09-21',valor:168200,
+   items:[{cat:'FL05I',cant:200,recibido:0,roto:0},{cat:'RF06P',cant:60,recibido:0,roto:0},{cat:'ES04I',cant:80,recibido:0,roto:0}]},
+  {oc:'OC-2026-023',prov:'Xinyi Glass · Shenzhen',contenedor:'MRKU 551209-8',etapa:'En tránsito marítimo',embarque:'2026-08-19',eta:'2026-10-14',valor:192400,
+   items:[{cat:'FL06I',cant:220,recibido:0,roto:0},{cat:'FL08I',cant:140,recibido:0,roto:0}]},
+  {oc:'OC-2026-024',prov:'Kibing Group · Hunan',contenedor:'—',etapa:'Orden emitida',embarque:'—',eta:'2026-11-28',valor:126000,
+   items:[{cat:'LM33I',cant:90,recibido:0,roto:0},{cat:'FL10I',cant:40,recibido:0,roto:0}]}
+];
+const ETAPAS_IMPO = ['Orden emitida','En tránsito marítimo','Puerto Arica','Aduana La Paz','En almacén'];
+
+/* --- Caja --- */
+const CAJA = [
+  {f:'2026-09-18T09:20',tipo:'Ingreso',cat:'Cobro de pedido',ref:'PD-2613',desc:'Hotel Presidente · anticipo 50 %',monto:11200,medio:'Transferencia'},
+  {f:'2026-09-18T08:45',tipo:'Ingreso',cat:'Venta mostrador',ref:'PD-2614',desc:'Arq. Daniela Rojas · seña',monto:1000,medio:'Efectivo'},
+  {f:'2026-09-17T17:30',tipo:'Egreso',cat:'Insumos',ref:'CP-0412',desc:'Discos de pulido y óxido de cerio',monto:2380,medio:'Efectivo'},
+  {f:'2026-09-17T16:10',tipo:'Ingreso',cat:'Cobro de pedido',ref:'PD-2609',desc:'Constructora Illimani · anticipo',monto:7430,medio:'Transferencia'},
+  {f:'2026-09-17T11:00',tipo:'Egreso',cat:'Energía',ref:'SE-0918',desc:'Factura eléctrica planta · agosto',monto:9840,medio:'Transferencia'},
+  {f:'2026-09-16T18:00',tipo:'Egreso',cat:'Sueldos',ref:'NM-0916',desc:'Adelanto quincena · producción',monto:14600,medio:'Transferencia'},
+  {f:'2026-09-16T10:20',tipo:'Ingreso',cat:'Cobro de pedido',ref:'PD-2608',desc:'Sr. Marco Villca · pago total',monto:1420,medio:'Efectivo'},
+  {f:'2026-09-15T15:40',tipo:'Egreso',cat:'Mantenimiento',ref:'MT-0088',desc:'Repuesto: 4 resistencias de cámara',monto:5600,medio:'Efectivo'},
+  {f:'2026-09-15T09:00',tipo:'Ingreso',cat:'Cobro de pedido',ref:'PD-2607',desc:'Aluminios del Sur · saldo',monto:9450,medio:'Transferencia'},
+  {f:'2026-09-14T14:00',tipo:'Egreso',cat:'Importación',ref:'OC-2026-021',desc:'Gastos de aduana y almacenaje',monto:18900,medio:'Transferencia'}
+];
+const SALDO_INICIAL = 86400;
+
+/* --- Horno de temple --- */
+const HORNO = {
+  modelo:'Tempervidro TV-2400 · vertical',origen:'Brasil',año:2009,horas:41820,ciclosHoy:6,
+  temperatura:[420,512,604,668,692,701,698,660,540,380],
+  componentes:[
+    {comp:'Resistencias cámara superior',estado:'Alerta',ultima:'2026-08-12',proxima:'2026-09-20',horas:640,nota:'Zona 3 con 8 % menos de radiación'},
+    {comp:'Termopares tipo K (8 u.)',estado:'OK',ultima:'2026-08-28',proxima:'2026-10-28',horas:1300,nota:'Calibración anual pendiente en noviembre'},
+    {comp:'Motor de rodillos / oscilación',estado:'OK',ultima:'2026-09-02',proxima:'2026-10-02',horas:420,nota:'Engrase quincenal realizado'},
+    {comp:'Compresor de soplado',estado:'Crítico',ultima:'2026-07-15',proxima:'2026-09-19',horas:1480,nota:'Caída de presión de 6,2 a 5,4 bar en ciclo largo'},
+    {comp:'Ductos y toberas de enfriamiento',estado:'Alerta',ultima:'2026-08-05',proxima:'2026-09-25',horas:880,nota:'Tobera 12 parcialmente obstruida'},
+    {comp:'Tablero eléctrico y contactores',estado:'OK',ultima:'2026-09-08',proxima:'2026-12-08',horas:180,nota:'Termografía sin puntos calientes'},
+    {comp:'Ventiladores de convección',estado:'OK',ultima:'2026-08-20',proxima:'2026-10-20',horas:760,nota:'Vibración dentro de norma'}
+  ],
+  roturas:[
+    {f:'2026-09-17',pedido:'PD-2609',cat:'FL08I',piezas:2,causa:'Estallido en enfriamiento',m2:5.0,costo:1060},
+    {f:'2026-09-16',pedido:'PD-2611',cat:'FL08I',piezas:1,causa:'Canto mal pulido',m2:1.3,costo:276},
+    {f:'2026-09-15',pedido:'PD-2607',cat:'FL06I',piezas:3,causa:'Estallido en enfriamiento',m2:6.5,costo:962},
+    {f:'2026-09-12',pedido:'PD-2604',cat:'FL06I',piezas:1,causa:'Inclusión de níquel-sulfuro',m2:2.2,costo:326},
+    {f:'2026-09-10',pedido:'PD-2601',cat:'FL08I',piezas:2,causa:'Choque térmico por carga rápida',m2:4.1,costo:869},
+    {f:'2026-09-08',pedido:'PD-2599',cat:'FL05I',piezas:1,causa:'Canto mal pulido',m2:1.1,costo:133}
+  ],
+  ciclos:[{f:'2026-09-11',n:7,rotas:0},{f:'2026-09-12',n:8,rotas:1},{f:'2026-09-14',n:6,rotas:0},
+          {f:'2026-09-15',n:9,rotas:3},{f:'2026-09-16',n:7,rotas:1},{f:'2026-09-17',n:8,rotas:2},{f:'2026-09-18',n:6,rotas:0}]
+};
+
+/* --- Personal --- */
+const PERSONAL = [
+  {nom:'Mariela Quispe',rol:'Ventas',ingreso:'2021-03-01',ventasMes:186400,comision:3728,pedidos:34,puntualidad:0.91},
+  {nom:'Julio Condori',rol:'Maestro vidriero',ingreso:'2016-06-15',ventasMes:0,comision:0,pedidos:0,puntualidad:0.97,merma:0.041},
+  {nom:'Elena Apaza',rol:'Almacén',ingreso:'2019-11-04',ventasMes:0,comision:0,pedidos:0,puntualidad:0.99},
+  {nom:'Freddy Mamani',rol:'Administración',ingreso:'2018-02-20',ventasMes:0,comision:0,pedidos:0,puntualidad:0.95},
+  {nom:'Wilson Choque',rol:'Operador de horno',ingreso:'2020-08-10',ventasMes:0,comision:0,pedidos:0,puntualidad:0.93,merma:0.062},
+  {nom:'Ana Laura Vargas',rol:'Ventas',ingreso:'2023-09-12',ventasMes:98300,comision:1966,pedidos:21,puntualidad:0.88}
+];
+
+const VENTAS_7D = [{d:'12 sep',v:18900},{d:'13 sep',v:12400},{d:'14 sep',v:9800},{d:'15 sep',v:24100},{d:'16 sep',v:16800},{d:'17 sep',v:21100},{d:'18 sep',v:12680}];
+
+/* ============================================================
+   MOTORES: precio · agenda de entrega · optimización de corte
+   ============================================================ */
+
+/* ---------- 1. Motor de precios ---------- */
+function cotizarPieza(codCat, ancho, alto, cant, procs, urgente){
+  const cat = catPorCod(codCat);
+  const area = (ancho/1000)*(alto/1000);
+  const areaFact = Math.max(area, MIN_FACTURABLE);
+  const perim = 2*((ancho/1000)+(alto/1000));
+  const det = [];
+  let unit = areaFact*cat.precio;
+  det.push({concepto:`${cat.nom} · ${M2(areaFact)}`, valor:unit});
+  (procs||[]).forEach(p=>{
+    const pr = PROCESOS.find(x=>x.cod===p.cod||x.cod===p);
+    const q  = p.cant!==undefined ? p.cant : (pr.unidad==='ml'?perim:(pr.unidad==='m²'?areaFact:1));
+    const v  = q*pr.precio;
+    unit += v;
+    det.push({concepto:`${pr.nom} · ${NUM(q,2)} ${pr.unidad}`, valor:v});
+  });
+  let total = unit*cant;
+  if(urgente){ const r = total*RECARGO_URGENTE; det.push({concepto:'Recargo por entrega prioritaria (22 %)',valor:r/cant}); total += r; }
+  return {cat, area, areaFact, perim, unit:total/cant, total, cant, detalle:det, m2:area*cant};
+}
+
+function validarPieza(codCat, ancho, alto, procs){
+  const cat = catPorCod(codCat); const avisos = [];
+  const templa = (procs||[]).some(p=>(p.cod||p)==='temple');
+  if(ancho>PLANTA.chapa.ancho-2*PLANTA.margen || alto>PLANTA.chapa.alto-2*PLANTA.margen)
+    avisos.push({t:'error',m:`No entra en la chapa estándar de ${PLANTA.chapa.ancho} × ${PLANTA.chapa.alto} mm.`});
+  if(templa && !cat.templable) avisos.push({t:'error',m:`${cat.nom} no es templable. Ofrecer laminado o vidrio crudo.`});
+  if(templa && cat.esp>PLANTA.espesorMaxTemple) avisos.push({t:'error',m:`El horno templa hasta ${PLANTA.espesorMaxTemple} mm.`});
+  if(templa){
+    const cabe = (ancho<=PLANTA.hornoUtil.ancho&&alto<=PLANTA.hornoUtil.alto)||(alto<=PLANTA.hornoUtil.ancho&&ancho<=PLANTA.hornoUtil.alto);
+    if(!cabe) avisos.push({t:'error',m:`Excede la cama del horno (${PLANTA.hornoUtil.ancho} × ${PLANTA.hornoUtil.alto} mm).`});
+  }
+  if(templa && !(procs||[]).some(p=>(p.cod||p)==='pulido'))
+    avisos.push({t:'aviso',m:'El temple exige canto pulido: se agrega el pulido al presupuesto.'});
+  if((ancho/1000)*(alto/1000) < MIN_FACTURABLE)
+    avisos.push({t:'aviso',m:`Pieza menor al mínimo facturable; se cobra ${MIN_FACTURABLE} m².`});
+  return avisos;
+}
+
+/* ---------- 2. Agenda de capacidad y compromiso de entrega ---------- */
+function cargaPorDia(){
+  const dias = {};
+  for(let i=0;i<8;i++){
+    const d = new Date(HOY); d.setDate(d.getDate()+i);
+    const k = d.toISOString().slice(0,10);
+    dias[k] = {fecha:k, temple:0, corte:0, pedidos:0, domingo:d.getDay()===0};
+  }
+  PEDIDOS.filter(p=>p.etapa!=='Entregado'&&p.etapa!=='Cotizado').forEach(p=>{
+    const k = p.entrega.slice(0,10);
+    if(!dias[k]) return;
+    const templa = p.piezas.some(x=>x.proc.includes('temple'));
+    dias[k].corte += p.m2; if(templa) dias[k].temple += p.m2; dias[k].pedidos++;
+  });
+  return dias;
+}
+
+function prometerEntrega(m2, requiereTemple, urgente){
+  const dias = cargaPorDia(); const claves = Object.keys(dias).sort();
+  const horasMin = urgente?18:24;
+  let inicio = masHoras(HOY, horasMin);
+  for(const k of claves){
+    const d = dias[k]; if(d.domingo) continue;
+    const fin = new Date(k+'T18:00:00');
+    if(fin < inicio) continue;
+    const okTemple = !requiereTemple || (d.temple+m2) <= PLANTA.capacidad.temple;
+    const okCorte  = (d.corte+m2) <= PLANTA.capacidad.corte;
+    const okEnt    = (d.pedidos+1) <= PLANTA.capacidad.entregas;
+    if(okTemple&&okCorte&&okEnt){
+      const h = new Date(k+'T16:00:00');
+      return {fecha:h, motivo:'Capacidad disponible confirmada', ocupacion:{
+        temple:(d.temple+m2)/PLANTA.capacidad.temple, corte:(d.corte+m2)/PLANTA.capacidad.corte, pedidos:(d.pedidos+1)/PLANTA.capacidad.entregas}};
+    }
+  }
+  const d = new Date(HOY); d.setDate(d.getDate()+9);
+  return {fecha:d, motivo:'Agenda saturada: primera fecha libre fuera de la semana', ocupacion:{temple:1,corte:1,pedidos:1}};
+}
+
+/* ---------- 3. Optimizador de corte (MaxRects · mejor ajuste de lado corto) ---------- */
+function podar(libres){
+  const out = libres.filter(r=>r.w>0&&r.h>0);
+  return out.filter((a,i)=>!out.some((b,j)=> j!==i && a.x>=b.x && a.y>=b.y && a.x+a.w<=b.x+b.w && a.y+a.h<=b.y+b.h && (a.w*a.h < b.w*b.h || (a.w*a.h===b.w*b.h && j<i))));
+}
+function buscarHueco(libres,w,h,rot){
+  let mejor=null;
+  for(const fr of libres){
+    const ops=[[w,h,false]]; if(rot&&w!==h) ops.push([h,w,true]);
+    for(const [iw,ih,r] of ops){
+      if(iw<=fr.w+0.01 && ih<=fr.h+0.01){
+        const sx=fr.w-iw, sy=fr.h-ih, corto=Math.min(sx,sy), largo=Math.max(sx,sy);
+        if(!mejor||corto<mejor.corto||(corto===mejor.corto&&largo<mejor.largo))
+          mejor={x:fr.x,y:fr.y,w:iw,h:ih,rot:r,corto,largo};
+      }
+    }
+  }
+  return mejor;
+}
+function partir(libres,u){
+  const out=[];
+  for(const fr of libres){
+    if(u.x>=fr.x+fr.w||u.x+u.w<=fr.x||u.y>=fr.y+fr.h||u.y+u.h<=fr.y){out.push(fr);continue;}
+    if(u.y>fr.y) out.push({x:fr.x,y:fr.y,w:fr.w,h:u.y-fr.y});
+    if(u.y+u.h<fr.y+fr.h) out.push({x:fr.x,y:u.y+u.h,w:fr.w,h:fr.y+fr.h-(u.y+u.h)});
+    if(u.x>fr.x) out.push({x:fr.x,y:fr.y,w:u.x-fr.x,h:fr.h});
+    if(u.x+u.w<fr.x+fr.w) out.push({x:u.x+u.w,y:fr.y,w:fr.x+fr.w-(u.x+u.w),h:fr.h});
+  }
+  return podar(out);
+}
+function empacar(W,H,piezas,rot){
+  let libres=[{x:0,y:0,w:W,h:H}]; const puestas=[]; const restantes=[];
+  const orden=[...piezas].sort((a,b)=> (b.w*b.h)-(a.w*a.h) || Math.max(b.w,b.h)-Math.max(a.w,a.h));
+  for(const p of orden){
+    const k=PLANTA.kerf;
+    const h=buscarHueco(libres,p.w+k,p.h+k,rot);
+    if(!h){ restantes.push(p); continue; }
+    puestas.push({...p,x:h.x,y:h.y,w:h.rot?p.h:p.w,h:h.rot?p.w:p.h,rot:h.rot});
+    libres=partir(libres,{x:h.x,y:h.y,w:h.w,h:h.h});
+  }
+  return {puestas,restantes,libres};
+}
+
+/**
+ * Plan completo: primero intenta consumir retazos existentes, luego chapas nuevas.
+ */
+function planificarCorte(lista, opciones){
+  const op = Object.assign({rotar:true, usarRetazos:true}, opciones||{});
+  const porTipo = {};
+  lista.forEach(it=>{ (porTipo[it.cat] = porTipo[it.cat]||[]).push(it); });
+  const planes=[]; const usoRetazos=[];
+  Object.keys(porTipo).forEach(cat=>{
+    let pend=[];
+    porTipo[cat].forEach(it=>{ for(let i=0;i<it.cant;i++) pend.push({w:it.ancho,h:it.alto,cat,etq:it.etq||`${it.ancho}×${it.alto}`,temple:it.temple}); });
+
+    if(op.usarRetazos){
+      const disp = RETAZOS.filter(r=>r.cat===cat&&r.estado==='Disponible')
+                          .sort((a,b)=>(a.a*a.b)-(b.a*b.b));
+      for(const rz of disp){
+        if(!pend.length) break;
+        const cabe = pend.filter(p=>(p.w<=rz.a&&p.h<=rz.b)||(op.rotar&&p.h<=rz.a&&p.w<=rz.b));
+        if(!cabe.length) continue;
+        const r = empacar(rz.a, rz.b, cabe, op.rotar);
+        if(!r.puestas.length) continue;
+        const usadas = r.puestas.map(p=>p.etq+'@'+p.w+'x'+p.h);
+        let quedan=[...pend];
+        r.puestas.forEach(p=>{ const i=quedan.findIndex(q=>(q.w===p.w&&q.h===p.h)||(q.w===p.h&&q.h===p.w)); if(i>=0) quedan.splice(i,1); });
+        pend = quedan;
+        planes.push({origen:'retazo',ref:rz.id,ubic:rz.ubic,cat,W:rz.a,H:rz.b,...r});
+        usoRetazos.push({id:rz.id,ubic:rz.ubic,piezas:r.puestas.length,area:(rz.a*rz.b)/1e6});
+      }
+    }
+    let guardia=0;
+    while(pend.length && guardia++<40){
+      const W=PLANTA.chapa.ancho-2*PLANTA.margen, H=PLANTA.chapa.alto-2*PLANTA.margen;
+      const r = empacar(W,H,pend,op.rotar);
+      if(!r.puestas.length) break;
+      planes.push({origen:'chapa',ref:`Chapa ${cat} #${planes.filter(p=>p.origen==='chapa').length+1}`,cat,W,H,...r});
+      pend = r.restantes;
+    }
+  });
+
+  let areaPiezas=0, areaSoporte=0, chapas=0; const nuevosRetazos=[];
+  planes.forEach(pl=>{
+    pl.areaPiezas = pl.puestas.reduce((s,p)=>s+p.w*p.h,0)/1e6;
+    pl.areaTotal  = (pl.W*pl.H)/1e6;
+    pl.aprov = pl.areaPiezas/pl.areaTotal;
+    areaPiezas += pl.areaPiezas; areaSoporte += pl.areaTotal;
+    if(pl.origen==='chapa') chapas++;
+    pl.utiles = pl.libres.filter(l=>l.w>=PLANTA.retazoMin.ancho&&l.h>=PLANTA.retazoMin.alto)
+                         .sort((a,b)=>(b.w*b.h)-(a.w*a.h));
+    pl.utiles.forEach(u=>nuevosRetazos.push({cat:pl.cat,a:Math.round(u.w),b:Math.round(u.h),area:(u.w*u.h)/1e6,de:pl.ref}));
+    pl.merma = pl.areaTotal - pl.areaPiezas - pl.utiles.reduce((s,u)=>s+(u.w*u.h)/1e6,0);
+  });
+  return {planes, chapas, areaPiezas, areaSoporte, aprov: areaSoporte? areaPiezas/areaSoporte : 0,
+          nuevosRetazos, usoRetazos, mermaReal: planes.reduce((s,p)=>s+p.merma,0)};
+}
+
+/* ---------- 4. Dibujo del plano de corte ---------- */
+function svgPlano(pl){
+  const pad=120, W=pl.W, H=pl.H;
+  const c=[`<svg viewBox="${-pad} ${-pad} ${W+pad*2} ${H+pad*1.6}" role="img">`];
+  c.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="var(--tinta)" stroke-width="6"/>`);
+  pl.utiles.forEach(u=>{
+    c.push(`<rect class="sobra util" x="${u.x}" y="${u.y}" width="${u.w}" height="${u.h}"/>`);
+    if(u.w>420&&u.h>200) c.push(`<text class="txt min" x="${u.x+u.w/2}" y="${u.y+u.h/2+10}" text-anchor="middle">retazo ${Math.round(u.w)}×${Math.round(u.h)}</text>`);
+  });
+  pl.puestas.forEach((p,i)=>{
+    c.push(`<rect class="pieza${p.temple?' tpl':''}" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}"/>`);
+    const cx=p.x+p.w/2, cy=p.y+p.h/2;
+    c.push(`<text class="txt" x="${cx}" y="${cy-4}" text-anchor="middle" font-weight="600">${i+1}</text>`);
+    if(p.w>420) c.push(`<text class="txt min" x="${cx}" y="${cy+34}" text-anchor="middle">${p.w} × ${p.h}${p.rot?' ↻':''}</text>`);
+  });
+  c.push(`<line class="cota" x1="0" y1="${-46}" x2="${W}" y2="${-46}"/>
+          <text class="txt" x="${W/2}" y="${-58}" text-anchor="middle">${W} mm</text>
+          <line class="cota" x1="${-46}" y1="0" x2="${-46}" y2="${H}"/>
+          <text class="txt" x="${-58}" y="${H/2}" text-anchor="middle" transform="rotate(-90 ${-58} ${H/2})">${H} mm</text>`);
+  c.push('</svg>');
+  return c.join('');
+}
+
+/* ---------- 5. Exportación para la cortadora CNC ---------- */
+function generarDXF(planes){
+  const L=[];
+  const linea=(x1,y1,x2,y2,capa)=>L.push('0','LINE','8',capa,'10',x1.toFixed(2),'20',y1.toFixed(2),'11',x2.toFixed(2),'21',y2.toFixed(2));
+  L.push('0','SECTION','2','ENTITIES');
+  let off=0;
+  planes.forEach(pl=>{
+    const oy=off;
+    linea(0,oy,pl.W,oy,'CHAPA'); linea(pl.W,oy,pl.W,oy+pl.H,'CHAPA');
+    linea(pl.W,oy+pl.H,0,oy+pl.H,'CHAPA'); linea(0,oy+pl.H,0,oy,'CHAPA');
+    pl.puestas.forEach(p=>{
+      const x=p.x,y=oy+p.y;
+      linea(x,y,x+p.w,y,'CORTE'); linea(x+p.w,y,x+p.w,y+p.h,'CORTE');
+      linea(x+p.w,y+p.h,x,y+p.h,'CORTE'); linea(x,y+p.h,x,y,'CORTE');
+    });
+    off += pl.H + 200;
+  });
+  L.push('0','ENDSEC','0','EOF');
+  return L.join('\n');
+}
+
+/* ============================================================
+   CARCASA: sesión, navegación, utilitarios de interfaz
+   ============================================================ */
+const $ = id => document.getElementById(id);
+let USR = USUARIOS[0], VISTA = 'panel';
+const ESTADO = {optim:[], plan:null, cot:[], chat:[]};
+
+const VISTAS = [
+  {g:'Operación'},
+  {id:'panel',      t:'Panel',                 ic:'▦', sub:'Situación del día'},
+  {id:'cotizador',  t:'Cotizador',             ic:'≡', sub:'Precio y fecha de entrega en un minuto'},
+  {id:'pedidos',    t:'Pedidos',               ic:'▤', sub:'Trazabilidad por pieza'},
+  {id:'agenda',     t:'Agenda de entregas',    ic:'▥', sub:'Capacidad real comprometida'},
+  {g:'Planta'},
+  {id:'optimizador',t:'Optimizador de corte',  ic:'✂', sub:'Plan de corte y archivo CNC'},
+  {id:'retazos',    t:'Retazos',               ic:'◧', sub:'Sobras localizadas y reutilizables'},
+  {id:'produccion', t:'Producción',            ic:'⚙', sub:'Cola de trabajo por etapa'},
+  {id:'horno',      t:'Horno de temple',       ic:'♨', sub:'Mantenimiento y roturas'},
+  {g:'Existencias'},
+  {id:'inventario', t:'Inventario',            ic:'▣', sub:'Vidriería y almacén'},
+  {id:'importaciones',t:'Importaciones',       ic:'⛴', sub:'De China al depósito'},
+  {id:'aluminio',   t:'Aluminio',              ic:'▬', sub:'Perfilería y herrajes'},
+  {g:'Gestión'},
+  {id:'caja',       t:'Caja y finanzas',       ic:'◈', sub:'Movimientos y resultado'},
+  {id:'clientes',   t:'Clientes',              ic:'☺', sub:'Cuentas y consumo'},
+  {id:'personal',   t:'Personal',              ic:'☰', sub:'Desempeño del equipo'},
+  {id:'asistente',  t:'Asistente WhatsApp',    ic:'✉', sub:'Respuestas automáticas con precio y plazo'},
+  {id:'reportes',   t:'Reportes y tarifas',    ic:'◐', sub:'Lista de precios y resultados'}
+];
+
+function puede(id){ return USR.vistas==='*' || USR.vistas.includes(id); }
+
+function pintarUsuarios(){
+  document.getElementById('listaUsuarios').innerHTML = USUARIOS.map((u,i)=>`
+    <button class="usuario${i===0?' on':''}" onclick="elegirUsuario('${u.id}',this)">
+      <span class="av">${u.ini}</span>
+      <span><b>${u.nom}</b><small>${u.rol} · ${u.cargo}</small></span>
+    </button>`).join('');
+}
+function elegirUsuario(id,el){
+  USR = USUARIOS.find(u=>u.id===id);
+  document.querySelectorAll('.usuario').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+function entrar(){
+  document.getElementById('ingreso').style.display='none';
+  document.getElementById('app').classList.add('on');
+  pintarMenu();
+  const primera = VISTAS.find(v=>v.id&&puede(v.id));
+  ir(primera.id);
+  medidores();
+  avisar(`Sesión iniciada · ${USR.nom} (${USR.rol})`);
+}
+function salir(){
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('ingreso').style.display='grid';
+}
+function pintarMenu(){
+  document.getElementById('menu').innerHTML = VISTAS.map(v=>{
+    if(v.g) return `<div class="grupo">${v.g}</div>`;
+    if(!puede(v.id)) return '';
+    const b = insignia(v.id);
+    return `<a href="#${v.id}" id="nav-${v.id}" onclick="ir('${v.id}');return false"><span class="ic">${v.ic}</span>${v.t}${b?`<span class="bad">${b}</span>`:''}</a>`;
+  }).join('');
+  document.getElementById('usrPie').innerHTML =
+    `<span class="av" style="width:28px;height:28px;border-radius:2px;background:#1E8E7E;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:600">${USR.ini}</span>
+     <span><b style="color:#fff">${USR.nom}</b><small>${USR.rol}</small></span>
+     <button onclick="salir()" title="Cerrar sesión">⏻</button>`;
+}
+function insignia(id){
+  if(id==='inventario') return CATALOGO.filter(c=>c.vid<c.min).length || '';
+  if(id==='horno') return HORNO.componentes.filter(c=>c.estado!=='OK').length || '';
+  if(id==='pedidos') return PEDIDOS.filter(p=>p.etapa==='Cotizado').length || '';
+  return '';
+}
+function ir(id){
+  if(!puede(id)) return;
+  VISTA = id;
+  const v = VISTAS.find(x=>x.id===id);
+  document.getElementById('tituloVista').textContent = v.t;
+  document.getElementById('rutaVista').textContent = v.sub;
+  document.querySelectorAll('#menu a').forEach(a=>a.classList.remove('on'));
+  const n = document.getElementById('nav-'+id); if(n) n.classList.add('on');
+  document.getElementById('lateral').classList.remove('abierta');
+  document.getElementById('vista').innerHTML = (VISTAS_FN[id]||(()=>'<div class="vacio">Sin contenido</div>'))();
+  if(TRAS_FN[id]) TRAS_FN[id]();
+  window.scrollTo({top:0});
+}
+function medidores(){
+  const dias = cargaPorDia(); const k = HOY.toISOString().slice(0,10); const d = dias[k]||{temple:0,pedidos:0};
+  const pt = Math.min(1,d.temple/PLANTA.capacidad.temple), pe = Math.min(1,d.pedidos/PLANTA.capacidad.entregas);
+  const g=(el,txt,p,v,c)=>{const i=document.getElementById(el); i.style.width=(p*100)+'%';
+    i.className = p>0.9?'lleno':(p>0.7?'alto':''); document.getElementById(txt).textContent = `${NUM(v,1)}/${c}`;};
+  g('medHorno','medHornoTxt',pt,d.temple,PLANTA.capacidad.temple);
+  g('medEnt','medEntTxt',pe,d.pedidos,PLANTA.capacidad.entregas);
+}
+function avisar(t){
+  const e=document.getElementById('toast'); e.textContent=t; e.classList.add('on');
+  clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove('on'),3200);
+}
+function modal(tit,html){
+  document.getElementById('modalTit').innerHTML = tit + '<button onclick="cerrarModal()">✕</button>';
+  document.getElementById('modalCuerpo').innerHTML = html;
+  document.getElementById('telon').classList.add('on');
+}
+function cerrarModal(){ document.getElementById('telon').classList.remove('on'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') cerrarModal(); });
+
+/* --- gráfico de barras en SVG --- */
+function barras(datos, alto=140, color='var(--filo)'){
+  const max = Math.max(...datos.map(d=>d.v))*1.15 || 1;
+  const w = 100/datos.length;
+  return `<svg viewBox="0 0 100 ${alto*0.36}" style="width:100%;height:${alto}px" preserveAspectRatio="none">
+    ${datos.map((d,i)=>{
+      const h=(d.v/max)*(alto*0.36-8);
+      return `<rect x="${i*w+w*0.18}" y="${alto*0.36-8-h}" width="${w*0.64}" height="${h}" fill="${color}" opacity="${i===datos.length-1?1:0.72}"/>`;
+    }).join('')}
+  </svg>
+  <div style="display:flex;font-family:'Archivo Narrow';font-size:11px;color:var(--tinta-2)">
+    ${datos.map(d=>`<span style="flex:1;text-align:center">${d.d}</span>`).join('')}
+  </div>`;
+}
+function anillo(pct,etq,color='var(--filo)'){
+  const r=34,c=2*Math.PI*r;
+  return `<svg viewBox="0 0 90 90" style="width:92px;height:92px">
+    <circle cx="45" cy="45" r="${r}" fill="none" stroke="var(--linea)" stroke-width="9"/>
+    <circle cx="45" cy="45" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="butt"
+      stroke-dasharray="${c}" stroke-dashoffset="${c*(1-Math.min(pct,1))}" transform="rotate(-90 45 45)"/>
+    <text x="45" y="43" text-anchor="middle" font-family="Archivo" font-size="17" font-weight="600" fill="var(--tinta)">${Math.round(pct*100)}%</text>
+    <text x="45" y="57" text-anchor="middle" font-family="Archivo Narrow" font-size="9" fill="var(--tinta-2)">${etq}</text>
+  </svg>`;
+}
+const etiEtapa = e => {
+  const cl = e==='Entregado'?'e-ok':(e==='Cotizado'?'e-gris':(['Temple','Control de calidad'].includes(e)?'e-cal':'e-ok'));
+  return `<span class="eti ${cl}">${ETAPA_ICONO[e]} ${e}</span>`;
+};
+
+/* ============================================================
+   VISTAS · panel, cotizador, pedidos, agenda, clientes
+   ============================================================ */
+
+function v_panel(){
+  const hoyK = HOY.toISOString().slice(0,10);
+  const ingresos = CAJA.filter(c=>c.tipo==='Ingreso').reduce((s,c)=>s+c.monto,0);
+  const egresos  = CAJA.filter(c=>c.tipo==='Egreso').reduce((s,c)=>s+c.monto,0);
+  const caja = SALDO_INICIAL + ingresos - egresos;
+  const abiertos = PEDIDOS.filter(p=>p.etapa!=='Entregado');
+  const porCobrar = CLIENTES.reduce((s,c)=>s+c.saldo,0);
+  const faltantes = CATALOGO.filter(c=>c.vid<c.min);
+  const críticos = HORNO.componentes.filter(c=>c.estado==='Crítico');
+  const rotM2 = HORNO.roturas.reduce((s,r)=>s+r.m2,0);
+  const dias = cargaPorDia();
+
+  const alertas = [];
+  críticos.forEach(c=>alertas.push({cl:'rojo',t:`Horno · ${c.comp} en estado crítico`,p:`${c.nota}. Mantenimiento previsto para el ${fecha(c.proxima)}.`,b:['Ver horno',"ir('horno')"]}));
+  if(faltantes.length) alertas.push({cl:'',t:`${faltantes.length} tipos de vidrio bajo el mínimo en vidriería`,
+    p:faltantes.map(f=>`${f.nom}: ${f.vid} chapas (mínimo ${f.min})`).join(' · '),b:['Pedir traslado',"ir('inventario')"]});
+  const saturado = Object.values(dias).filter(d=>!d.domingo && d.temple/PLANTA.capacidad.temple>0.85);
+  if(saturado.length) alertas.push({cl:'',t:`Temple saturado el ${fechaCorta(saturado[0].fecha)}`,
+    p:`${NUM(saturado[0].temple,1)} m² comprometidos de ${PLANTA.capacidad.temple} m² diarios. El cotizador ya no promete esa fecha.`,b:['Ver agenda',"ir('agenda')"]});
+  alertas.push({cl:'verde',t:'Retazos aprovechables por Bs 14.280',
+    p:`${RETAZOS.filter(r=>r.estado==='Disponible').length} piezas registradas y localizadas. El optimizador las usa antes de abrir chapa nueva.`,b:['Ver retazos',"ir('retazos')"]});
+
+  return `
+  ${alertas.map(a=>`<div class="aviso ${a.cl}"><div><b>${a.t}</b><p>${a.p}</p></div><button class="btn sec chico" onclick="${a.b[1]}">${a.b[0]}</button></div>`).join('')}
+
+  <div class="tarjetas k4" style="margin:16px 0">
+    <div class="caja kpi frio"><div class="rot">Caja disponible</div><div class="val">${BS(caja)}</div><div class="var sube">+ ${BS(ingresos-egresos)} en la semana</div></div>
+    <div class="caja kpi"><div class="rot">Facturado en septiembre</div><div class="val">${BS(284700)}</div><div class="var sube">+ 11,4 % contra agosto</div></div>
+    <div class="caja kpi"><div class="rot">Por cobrar</div><div class="val">${BS(porCobrar)}</div><div class="var">${CLIENTES.filter(c=>c.saldo>0).length} clientes con saldo</div></div>
+    <div class="caja kpi calor"><div class="rot">Merma por rotura en temple</div><div class="val">${NUM(rotM2,1)}<small> m² · 10 días</small></div><div class="var baja">Bs 3.626 perdidos</div></div>
+  </div>
+
+  <div class="tarjetas k3">
+    <div class="caja" style="grid-column:span 2">
+      <h3>Ventas de los últimos 7 días<span class="acc"><button class="btn sec chico" onclick="ir('reportes')">Reportes</button></span></h3>
+      <div class="cuerpo">${barras(VENTAS_7D.map(v=>({d:v.d,v:v.v})),150)}</div>
+    </div>
+    <div class="caja">
+      <h3>Carga de planta hoy</h3>
+      <div class="cuerpo" style="display:flex;gap:10px;justify-content:space-around;align-items:center">
+        ${anillo((dias[hoyK]?.temple||0)/PLANTA.capacidad.temple,'temple','var(--horno)')}
+        ${anillo((dias[hoyK]?.corte||0)/PLANTA.capacidad.corte,'corte')}
+        ${anillo((dias[hoyK]?.pedidos||0)/PLANTA.capacidad.entregas,'entregas','var(--casco)')}
+      </div>
+    </div>
+  </div>
+
+  <div class="tarjetas k2" style="margin-top:14px">
+    <div class="caja">
+      <h3>Pedidos en planta<span class="acc"><button class="btn sec chico" onclick="ir('pedidos')">Ver todos</button></span></h3>
+      <div class="tablon"><table>
+        <thead><tr><th>Pedido</th><th>Cliente</th><th>Etapa</th><th class="der">m²</th><th>Entrega</th></tr></thead>
+        <tbody>${abiertos.slice(0,6).map(p=>{
+          const c=CLIENTES.find(c=>c.id===p.cli);
+          const tarde = new Date(p.entrega) < HOY;
+          return `<tr onclick="verPedido('${p.id}')" style="cursor:pointer">
+            <td><b>${p.id}</b></td><td>${c.nom}</td><td>${etiEtapa(p.etapa)}</td>
+            <td class="der">${NUM(p.m2,1)}</td>
+            <td>${tarde?'<span class="eti e-mal">vencido</span> ':''}${fechaCorta(p.entrega)} ${hora(p.entrega)}</td></tr>`;
+        }).join('')}</tbody></table></div>
+    </div>
+    <div class="caja">
+      <h3>Últimos movimientos de caja<span class="acc"><button class="btn sec chico" onclick="ir('caja')">Abrir caja</button></span></h3>
+      <div class="tablon"><table>
+        <thead><tr><th>Fecha</th><th>Concepto</th><th class="der">Monto</th></tr></thead>
+        <tbody>${CAJA.slice(0,6).map(c=>`<tr><td>${fechaCorta(c.f)}</td><td>${c.desc}</td>
+          <td class="der" style="color:${c.tipo==='Ingreso'?'var(--filo)':'var(--rotura)'}">${c.tipo==='Ingreso'?'+':'−'} ${BS(c.monto)}</td></tr>`).join('')}</tbody></table></div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- COTIZADOR ---------------- */
+function v_cotizador(){
+  return `
+  <div class="tarjetas" style="grid-template-columns:1.25fr .75fr;gap:14px">
+    <div>
+      <div class="caja" style="margin-bottom:14px">
+        <h3>Nueva pieza</h3>
+        <div class="cuerpo">
+          <div class="fila" style="margin-bottom:10px">
+            <div class="campo" style="flex:2"><label>Tipo de vidrio</label>
+              <select id="cCat">${CATALOGO.map(c=>`<option value="${c.cod}">${c.nom} · ${BS(c.precio)}/m²</option>`).join('')}</select></div>
+            <div class="campo"><label>Ancho (mm)</label><input id="cA" type="number" value="1200" min="50"></div>
+            <div class="campo"><label>Alto (mm)</label><input id="cB" type="number" value="800" min="50"></div>
+            <div class="campo" style="max-width:90px"><label>Cantidad</label><input id="cC" type="number" value="4" min="1"></div>
+          </div>
+          <div class="campo"><label>Procesos</label>
+            <div id="cProc" style="display:flex;gap:14px;flex-wrap:wrap;padding:6px 0">
+              ${PROCESOS.map(p=>`<label style="display:flex;gap:6px;align-items:center;font-family:'Archivo Narrow';font-size:13px" title="${p.desc}">
+                <input type="checkbox" value="${p.cod}"> ${p.nom} <span style="color:var(--tinta-2)">${BS(p.precio)}/${p.unidad}</span></label>`).join('')}
+            </div>
+          </div>
+          <div class="fila">
+            <div class="campo" style="flex:2"><label>Descripción para el taller</label><input id="cDesc" placeholder="Ej.: hoja de box corredizo"></div>
+            <div class="campo fijo"><label style="display:flex;gap:6px;align-items:center"><input id="cUrg" type="checkbox"> Entrega prioritaria (+22 %)</label></div>
+            <button class="btn fijo" onclick="agregarCot()">Agregar al presupuesto</button>
+          </div>
+          <div id="cAvisos" style="margin-top:10px"></div>
+        </div>
+      </div>
+      <div class="caja">
+        <h3>Presupuesto <span id="cNro" style="color:var(--tinta-2);font-family:'Archivo Narrow';font-weight:400"></span>
+          <span class="acc"><button class="btn sec chico" onclick="ESTADO.cot=[];pintarCot()">Vaciar</button></span></h3>
+        <div id="cTabla"></div>
+      </div>
+    </div>
+    <div>
+      <div class="caja" style="margin-bottom:14px"><h3>Resumen</h3><div class="cuerpo" id="cResumen"></div></div>
+      <div class="caja"><h3>Compromiso de entrega</h3><div class="cuerpo" id="cEntrega"></div></div>
+    </div>
+  </div>`;
+}
+function tras_cotizador(){ pintarCot(); }
+function agregarCot(){
+  const cod=$('cCat').value, a=+$('cA').value, b=+$('cB').value, c=+$('cC').value;
+  let procs=[...document.querySelectorAll('#cProc input:checked')].map(i=>i.value);
+  const avisos = validarPieza(cod,a,b,procs);
+  $('cAvisos').innerHTML = avisos.map(v=>`<div class="aviso ${v.t==='error'?'rojo':''}"><div><b>${v.t==='error'?'No se puede producir':'Ajuste automático'}</b><p>${v.m}</p></div></div>`).join('');
+  if(avisos.some(v=>v.t==='error')) return;
+  if(procs.includes('temple')&&!procs.includes('pulido')) procs=['pulido',...procs];
+  ESTADO.cot.push({cod,a,b,c,procs,desc:$('cDesc').value||catPorCod(cod).nom,urg:$('cUrg').checked});
+  $('cDesc').value=''; pintarCot(); avisar('Pieza agregada al presupuesto');
+}
+function quitarCot(i){ ESTADO.cot.splice(i,1); pintarCot(); }
+function pintarCot(){
+  const t=document.getElementById('cTabla'); if(!t) return;
+  document.getElementById('cNro').textContent = ESTADO.cot.length? 'PR-'+String(4820+ESTADO.cot.length).slice(0,4) : '';
+  if(!ESTADO.cot.length){
+    t.innerHTML='<div class="vacio">Agregue piezas para armar el presupuesto.<br>El sistema calcula precio, procesos y fecha de entrega comprometida.</div>';
+    document.getElementById('cResumen').innerHTML='<div class="vacio" style="padding:14px">Sin piezas</div>';
+    document.getElementById('cEntrega').innerHTML='<div class="vacio" style="padding:14px">Sin piezas</div>';
+    return;
+  }
+  const filas = ESTADO.cot.map((p,i)=>{
+    const q = cotizarPieza(p.cod,p.a,p.b,p.c,p.procs,p.urg);
+    return {p,q,i};
+  });
+  const total = filas.reduce((s,f)=>s+f.q.total,0);
+  const m2 = filas.reduce((s,f)=>s+f.q.m2,0);
+  const templa = ESTADO.cot.some(p=>p.procs.includes('temple'));
+  const urg = ESTADO.cot.some(p=>p.urg);
+
+  t.innerHTML = `<div class="tablon"><table>
+    <thead><tr><th>Descripción</th><th>Medida</th><th class="der">Cant.</th><th class="der">m²</th><th>Procesos</th><th class="der">Unitario</th><th class="der">Total</th><th></th></tr></thead>
+    <tbody>${filas.map(f=>`<tr>
+      <td><b>${f.p.desc}</b><br><span style="color:var(--tinta-2)">${f.q.cat.nom}</span></td>
+      <td>${f.p.a} × ${f.p.b}</td><td class="der">${f.p.c}</td><td class="der">${NUM(f.q.m2,2)}</td>
+      <td>${f.p.procs.map(c=>`<span class="eti e-gris">${PROCESOS.find(x=>x.cod===c).nom}</span>`).join(' ')||'—'}</td>
+      <td class="der">${BS(f.q.unit)}</td><td class="der"><b>${BS(f.q.total)}</b></td>
+      <td><button class="btn sec chico" onclick="quitarCot(${f.i})">✕</button></td></tr>`).join('')}</tbody></table></div>`;
+
+  const ent = prometerEntrega(m2, templa, urg);
+  document.getElementById('cResumen').innerHTML = `
+    <dl class="malla-lin">
+      <dt>Piezas</dt><dd>${ESTADO.cot.reduce((s,p)=>s+p.c,0)}</dd>
+      <dt>Superficie</dt><dd>${M2(m2)}</dd>
+      <dt>Subtotal</dt><dd>${BS(total/1.13)}</dd>
+      <dt>IVA 13 %</dt><dd>${BS(total-total/1.13)}</dd>
+      <dt style="font-size:15px;color:var(--tinta)"><b>Total</b></dt><dd style="font-size:19px"><b>${BS(total)}</b></dd>
+      <dt>Equivalente</dt><dd>USD ${NUM(total/PLANTA.tipoCambio,2)}</dd>
+    </dl>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn" style="flex:1" onclick="confirmarPedido(${total},${m2},${templa},${urg})">Confirmar pedido</button>
+      <button class="btn sec" onclick="enviarOptimizador()">Enviar a corte</button>
+    </div>`;
+
+  const oc = ent.ocupacion;
+  document.getElementById('cEntrega').innerHTML = `
+    <div style="font-size:24px;font-weight:600;letter-spacing:-.02em">${fecha(ent.fecha)}</div>
+    <div style="font-family:'Archivo Narrow';color:var(--tinta-2);margin-bottom:12px">${hora(ent.fecha)} · ${ent.motivo}</div>
+    <dl class="malla-lin">
+      <dt>Temple ese día</dt><dd>${Math.round(oc.temple*100)} % de ${PLANTA.capacidad.temple} m²</dd>
+      <dt>Corte ese día</dt><dd>${Math.round(oc.corte*100)} % de ${PLANTA.capacidad.corte} m²</dd>
+      <dt>Entregas ese día</dt><dd>${Math.round(oc.pedidos*100)} % de ${PLANTA.capacidad.entregas}</dd>
+    </dl>
+    <p style="font-size:12.5px;color:var(--tinta-2);font-family:'Archivo Narrow';margin-top:12px">
+      La fecha sale de la capacidad ya comprometida por todos los vendedores. Ningún usuario puede prometer un día que la planta no puede cumplir.</p>`;
+}
+function confirmarPedido(total,m2,templa,urg){
+  const ent = prometerEntrega(m2,templa,urg);
+  const id = 'PD-'+(2615+Math.floor(Math.random()*9));
+  modal('Pedido confirmado', `
+    <div class="aviso verde"><div><b>${id} registrado</b><p>Se reservó capacidad de planta y se generó el enlace de seguimiento para el cliente.</p></div></div>
+    <dl class="malla-lin" style="margin:14px 0">
+      <dt>Total</dt><dd>${BS(total)}</dd>
+      <dt>Superficie</dt><dd>${M2(m2)}</dd>
+      <dt>Entrega comprometida</dt><dd>${fecha(ent.fecha)} ${hora(ent.fecha)}</dd>
+      <dt>Anticipo sugerido (50 %)</dt><dd>${BS(total/2)}</dd>
+    </dl>
+    <div class="campo"><label>Enlace de seguimiento para el cliente</label>
+      <input readonly value="vidratemp.bo/seguir/${id}" onclick="this.select()"></div>
+    <p style="font-size:12.5px;color:var(--tinta-2);font-family:'Archivo Narrow'">El cliente ve el avance pieza por pieza, igual que un pedido de comida. Se envía automáticamente por WhatsApp al confirmar.</p>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="cerrarModal();ir('pedidos')">Ver pedidos</button>
+    <button class="btn sec" onclick="cerrarModal()">Cerrar</button></div>`);
+  ESTADO.cot=[]; pintarCot();
+}
+function enviarOptimizador(){
+  ESTADO.optim = ESTADO.cot.map(p=>({cat:p.cod,ancho:p.a,alto:p.b,cant:p.c,etq:p.desc,temple:p.procs.includes('temple')}));
+  ir('optimizador'); avisar('Piezas enviadas al optimizador de corte');
+}
+
+/* ---------------- PEDIDOS ---------------- */
+function v_pedidos(){
+  return `
+  <div class="pestanas" id="pesPed">
+    ${['Todos','En planta','Por entregar','Entregados'].map((t,i)=>`<button class="${i===0?'on':''}" onclick="filtrarPed('${t}',this)">${t}</button>`).join('')}
+  </div>
+  <div class="caja"><h3>Pedidos<span class="acc"><button class="btn chico" onclick="ir('cotizador')">Nuevo pedido</button></span></h3>
+  <div class="tablon" id="tPedidos"></div></div>`;
+}
+function tras_pedidos(){ filtrarPed('Todos'); }
+function filtrarPed(f,el){
+  if(el){document.querySelectorAll('#pesPed button').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+  let l=[...PEDIDOS];
+  if(f==='En planta') l=l.filter(p=>['Corte','Pulido','Lavado','Temple','Control de calidad'].includes(p.etapa));
+  if(f==='Por entregar') l=l.filter(p=>p.etapa==='Listo para entrega');
+  if(f==='Entregados') l=l.filter(p=>p.etapa==='Entregado');
+  document.getElementById('tPedidos').innerHTML = `<table>
+    <thead><tr><th>Pedido</th><th>Cliente</th><th>Piezas</th><th class="der">m²</th><th>Etapa</th><th>Entrega</th><th class="der">Total</th><th>Seguimiento</th></tr></thead>
+    <tbody>${l.map(p=>{const c=CLIENTES.find(x=>x.id===p.cli); const tarde=new Date(p.entrega)<HOY&&p.etapa!=='Entregado';
+      return `<tr style="cursor:pointer" onclick="verPedido('${p.id}')">
+        <td><b>${p.id}</b>${p.urgente?' <span class="eti e-cal">prioritario</span>':''}</td>
+        <td>${c.nom}</td><td>${p.piezas.reduce((s,x)=>s+x.c,0)} u. · ${p.piezas.length} medidas</td>
+        <td class="der">${NUM(p.m2,1)}</td><td>${etiEtapa(p.etapa)}</td>
+        <td>${tarde?'<span class="eti e-mal">vencido</span> ':''}${fechaCorta(p.entrega)} ${hora(p.entrega)}</td>
+        <td class="der">${BS(p.total)}</td>
+        <td><span style="color:var(--filo)">vidratemp.bo/seguir/${p.id}</span></td></tr>`;}).join('')}
+    </tbody></table>`;
+}
+function verPedido(id){
+  const p=PEDIDOS.find(x=>x.id===id), c=CLIENTES.find(x=>x.id===p.cli);
+  const idx=ETAPAS.indexOf(p.etapa);
+  modal(`${p.id} · ${c.nom}`,`
+    <div class="tarjetas k2" style="gap:18px">
+      <div>
+        <dl class="malla-lin" style="margin-bottom:14px">
+          <dt>Estado</dt><dd>${etiEtapa(p.etapa)}</dd>
+          <dt>Creado</dt><dd>${fecha(p.creado)} ${hora(p.creado)}</dd>
+          <dt>Entrega comprometida</dt><dd>${fecha(p.entrega)} ${hora(p.entrega)}</dd>
+          <dt>Superficie</dt><dd>${M2(p.m2)}</dd>
+          <dt>Total</dt><dd><b>${BS(p.total)}</b></dd>
+          <dt>Vendedor</dt><dd>${USUARIOS.find(u=>u.id===p.vend).nom}</dd>
+        </dl>
+        <table><thead><tr><th>Pieza</th><th>Medida</th><th class="der">Cant.</th></tr></thead>
+        <tbody>${p.piezas.map(x=>`<tr><td>${x.desc}<br><span style="color:var(--tinta-2)">${catPorCod(x.cat).nom}${x.proc.length?' · '+x.proc.map(c=>PROCESOS.find(y=>y.cod===c).nom).join(', '):''}</span></td>
+          <td>${x.a} × ${x.b}</td><td class="der">${x.c}</td></tr>`).join('')}</tbody></table>
+      </div>
+      <div>
+        <div class="traza">${ETAPAS.map((e,i)=>`
+          <div class="paso ${i<idx?'hecho':(i===idx?'activo':'')}">
+            <div class="bolita">${i<idx?'✓':ETAPA_ICONO[e]}</div>
+            <div><b>${e}</b><span>${i<idx?'Completado':(i===idx?'En curso ahora':'Pendiente')}</span></div>
+          </div>`).join('')}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn" onclick="avanzarPedido('${p.id}')">Avanzar etapa</button>
+      <button class="btn sec" onclick="ESTADO.optim=${JSON.stringify(p.piezas.map(x=>({cat:x.cat,ancho:x.a,alto:x.b,cant:x.c,etq:x.desc,temple:x.proc.includes('temple')}))).replace(/"/g,'&quot;')};cerrarModal();ir('optimizador')">Plan de corte</button>
+      <button class="btn sec" onclick="cerrarModal()">Cerrar</button>
+    </div>`);
+}
+function avanzarPedido(id){
+  const p=PEDIDOS.find(x=>x.id===id); const i=ETAPAS.indexOf(p.etapa);
+  if(i<ETAPAS.length-1){ p.etapa=ETAPAS[i+1]; avisar(`${id} pasó a ${p.etapa} · el cliente ya lo ve en su enlace`); }
+  cerrarModal(); if(VISTA==='pedidos') filtrarPed('Todos'); else ir(VISTA);
+}
+
+/* ---------------- AGENDA ---------------- */
+function v_agenda(){
+  const dias=cargaPorDia();
+  return `
+  <div class="aviso"><div><b>Así se evitan las promesas imposibles</b>
+    <p>Cada pedido confirmado descuenta capacidad de temple, de corte y un cupo de entrega. Los vendedores ven el mismo tablero, en tiempo real, desde mostrador o WhatsApp.</p></div></div>
+  <div class="tarjetas k4" style="margin:14px 0">
+    <div class="caja kpi frio"><div class="rot">Capacidad de temple</div><div class="val">${PLANTA.capacidad.temple}<small> m²/día</small></div><div class="var">6 a 9 ciclos de horno</div></div>
+    <div class="caja kpi"><div class="rot">Capacidad de corte</div><div class="val">${PLANTA.capacidad.corte}<small> m²/día</small></div><div class="var">2 mesas · 3 vidrieros</div></div>
+    <div class="caja kpi"><div class="rot">Entregas por día</div><div class="val">${PLANTA.capacidad.entregas}<small> pedidos</small></div><div class="var">2 camionetas · zona urbana</div></div>
+    <div class="caja kpi calor"><div class="rot">Cumplimiento a fecha</div><div class="val">92,6<small> %</small></div><div class="var sube">era 61 % antes del sistema</div></div>
+  </div>
+  <div class="caja"><h3>Próximos 8 días</h3><div class="tablon"><table>
+    <thead><tr><th>Día</th><th>Temple</th><th></th><th>Corte</th><th></th><th class="der">Pedidos</th><th>Situación</th></tr></thead>
+    <tbody>${Object.values(dias).map(d=>{
+      const pt=d.temple/PLANTA.capacidad.temple, pc=d.corte/PLANTA.capacidad.corte;
+      const est = d.domingo?['e-gris','Cerrado']:(pt>0.9?['e-mal','Sin cupo']:(pt>0.7?['e-cal','Ajustado']:['e-ok','Disponible']));
+      const bar=p=>`<div class="barrita" style="width:120px"><i class="${p>0.9?'lleno':(p>0.7?'alto':'')}" style="width:${Math.min(100,p*100)}%"></i></div>`;
+      return `<tr><td><b>${new Date(d.fecha+'T12:00').toLocaleDateString('es-BO',{weekday:'long',day:'2-digit',month:'short'})}</b></td>
+        <td class="der">${NUM(d.temple,1)} m²</td><td>${bar(pt)}</td>
+        <td class="der">${NUM(d.corte,1)} m²</td><td>${bar(pc)}</td>
+        <td class="der">${d.pedidos}</td><td><span class="eti ${est[0]}">${est[1]}</span></td></tr>`;}).join('')}
+    </tbody></table></div></div>`;
+}
+
+/* ---------------- CLIENTES ---------------- */
+function v_clientes(){
+  return `<div class="caja"><h3>Clientes<span class="acc"><button class="btn chico" onclick="avisar('Alta de cliente · demostración')">Nuevo cliente</button></span></h3>
+  <div class="tablon"><table>
+    <thead><tr><th>Cliente</th><th>Tipo</th><th>Zona</th><th>Teléfono</th><th class="der">Línea de crédito</th><th class="der">Saldo</th><th class="der">Compras 12 m</th><th>Pedidos</th></tr></thead>
+    <tbody>${CLIENTES.map(c=>{
+      const ped=PEDIDOS.filter(p=>p.cli===c.id);
+      return `<tr><td><b>${c.nom}</b></td><td><span class="eti e-gris">${c.tipo}</span></td><td>${c.zona}</td><td>${c.tel}</td>
+      <td class="der">${c.credito?BS(c.credito):'—'}</td>
+      <td class="der" style="color:${c.saldo>0?'var(--horno)':'inherit'}">${c.saldo?BS(c.saldo):'al día'}</td>
+      <td class="der">${BS(c.compras)}</td><td>${ped.length} activos</td></tr>`;}).join('')}
+  </tbody></table></div></div>`;
+}
+
+/* ============================================================
+   VISTAS · optimizador, retazos, producción, horno
+   ============================================================ */
+
+function v_optimizador(){
+  return `
+  <div class="tarjetas" style="grid-template-columns:.9fr 2.1fr;gap:14px;align-items:start">
+    <div>
+      <div class="caja" style="margin-bottom:14px">
+        <h3>Piezas a cortar</h3>
+        <div class="cuerpo">
+          <div class="campo"><label>Tipo de vidrio</label>
+            <select id="oCat">${CATALOGO.map(c=>`<option value="${c.cod}">${c.nom}</option>`).join('')}</select></div>
+          <div class="fila">
+            <div class="campo"><label>Ancho (mm)</label><input id="oA" type="number" value="1200"></div>
+            <div class="campo"><label>Alto (mm)</label><input id="oB" type="number" value="800"></div>
+            <div class="campo" style="max-width:80px"><label>Cant.</label><input id="oC" type="number" value="6" min="1"></div>
+          </div>
+          <div class="campo"><label>Identificación</label><input id="oE" placeholder="Ej.: hoja corrediza"></div>
+          <button class="btn" style="width:100%" onclick="agregarOpt()">Agregar pieza</button>
+        </div>
+      </div>
+      <div class="caja" style="margin-bottom:14px">
+        <h3>Lista de corte</h3><div id="oLista"></div>
+      </div>
+      <div class="caja">
+        <h3>Parámetros</h3>
+        <div class="cuerpo">
+          <label style="display:flex;gap:8px;align-items:center;margin-bottom:7px"><input type="checkbox" id="oRot" checked> Permitir rotación de piezas</label>
+          <label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="oRet" checked> Usar primero retazos del depósito</label>
+          <dl class="malla-lin">
+            <dt>Chapa estándar</dt><dd>${PLANTA.chapa.ancho} × ${PLANTA.chapa.alto} mm</dd>
+            <dt>Refile de borde</dt><dd>${PLANTA.margen} mm</dd>
+            <dt>Pérdida por corte</dt><dd>${PLANTA.kerf} mm</dd>
+            <dt>Retazo mínimo</dt><dd>${PLANTA.retazoMin.ancho} × ${PLANTA.retazoMin.alto} mm</dd>
+          </dl>
+          <button class="btn calor" style="width:100%;margin-top:12px" onclick="correrOptimizador()">Calcular plan de corte</button>
+        </div>
+      </div>
+    </div>
+    <div id="oSalida"></div>
+  </div>`;
+}
+function tras_optimizador(){
+  if(!ESTADO.optim.length) ESTADO.optim=[
+    {cat:'FL08I',ancho:1200,alto:2100,cant:4,etq:'Puerta box',temple:true},
+    {cat:'FL08I',ancho:700,alto:1900,cant:6,etq:'Hoja lateral',temple:true},
+    {cat:'FL06I',ancho:1400,alto:800,cant:8,etq:'Ventana corrediza',temple:false}];
+  pintarLista(); correrOptimizador();
+}
+function agregarOpt(){
+  ESTADO.optim.push({cat:$('oCat').value,ancho:+$('oA').value,alto:+$('oB').value,cant:+$('oC').value,
+    etq:$('oE').value||`${$('oA').value}×${$('oB').value}`,temple:false});
+  $('oE').value=''; pintarLista();
+}
+function quitarOpt(i){ ESTADO.optim.splice(i,1); pintarLista(); }
+function pintarLista(){
+  const e=document.getElementById('oLista'); if(!e) return;
+  if(!ESTADO.optim.length){ e.innerHTML='<div class="vacio">Sin piezas cargadas</div>'; return; }
+  e.innerHTML = `<table><thead><tr><th>Pieza</th><th>Medida</th><th class="der">Cant.</th><th></th></tr></thead>
+    <tbody>${ESTADO.optim.map((p,i)=>`<tr><td><b>${p.etq}</b><br><span style="color:var(--tinta-2)">${catPorCod(p.cat).nom}</span></td>
+      <td>${p.ancho}×${p.alto}</td><td class="der">${p.cant}</td>
+      <td><button class="btn sec chico" onclick="quitarOpt(${i})">✕</button></td></tr>`).join('')}</tbody></table>`;
+}
+function correrOptimizador(){
+  const s=document.getElementById('oSalida'); if(!s) return;
+  if(!ESTADO.optim.length){ s.innerHTML='<div class="caja"><div class="vacio">Cargue piezas y calcule el plan.</div></div>'; return; }
+  const r = planificarCorte(ESTADO.optim,{rotar:document.getElementById('oRot').checked,usarRetazos:document.getElementById('oRet').checked});
+  ESTADO.plan = r;
+  const chapasSinOptim = Math.ceil(r.areaPiezas / ((PLANTA.chapa.ancho*PLANTA.chapa.alto/1e6)*0.62));
+  const ahorro = (chapasSinOptim - r.chapas);
+  const costoChapa = ESTADO.optim.length? catPorCod(ESTADO.optim[0].cat).precio * (PLANTA.chapa.ancho*PLANTA.chapa.alto/1e6) : 0;
+
+  s.innerHTML = `
+  <div class="tarjetas k4" style="margin-bottom:14px">
+    <div class="caja kpi frio"><div class="rot">Aprovechamiento</div><div class="val">${NUM(r.aprov*100,1)}<small> %</small></div><div class="var sube">el corte manual promedia 62 %</div></div>
+    <div class="caja kpi"><div class="rot">Chapas nuevas</div><div class="val">${r.chapas}</div><div class="var">${ahorro>0?`${ahorro} menos que sin optimizar`:'mínimo posible'}</div></div>
+    <div class="caja kpi"><div class="rot">Retazos consumidos</div><div class="val">${r.usoRetazos.length}</div><div class="var">${r.usoRetazos.length?'ahorro de '+BS(ahorro>0?ahorro*costoChapa:costoChapa*0.6):'ninguno aplicable'}</div></div>
+    <div class="caja kpi calor"><div class="rot">Merma real</div><div class="val">${NUM(r.mermaReal,2)}<small> m²</small></div><div class="var">sin contar retazos rescatables</div></div>
+  </div>
+
+  ${r.usoRetazos.length?`<div class="aviso verde"><div><b>Antes de abrir chapa nueva, use estos retazos</b>
+    <p>${r.usoRetazos.map(u=>`<b>${u.id}</b> en <b>${u.ubic}</b> → ${u.piezas} pieza(s)`).join(' · ')}</p></div>
+    <button class="btn sec chico" onclick="ir('retazos')">Ver depósito</button></div>`:''}
+
+  <div class="caja" style="margin-bottom:14px"><h3>Planos de corte
+    <span class="acc">
+      <button class="btn sec chico" onclick="verDXF()">Archivo para la cortadora</button>
+      <button class="btn sec chico" onclick="window.print()">Imprimir para el taller</button>
+      <button class="btn chico" onclick="mandarAProduccion()">Enviar a producción</button>
+    </span></h3>
+    <div class="cuerpo">
+      ${r.planes.map((pl,i)=>`
+        <div class="plano">
+          <div class="cab">
+            <h4>${pl.origen==='retazo'?`Retazo ${pl.ref}`:pl.ref}</h4>
+            ${pl.origen==='retazo'?`<span class="eti e-ok">ubicación ${pl.ubic}</span>`:`<span class="eti e-gris">chapa ${PLANTA.chapa.ancho}×${PLANTA.chapa.alto}</span>`}
+            <span class="eti ${pl.aprov>0.8?'e-ok':(pl.aprov>0.65?'e-cal':'e-mal')}">aprovecha ${NUM(pl.aprov*100,1)} %</span>
+            <span style="font-family:'Archivo Narrow';color:var(--tinta-2);margin-left:auto">
+              ${pl.puestas.length} piezas · ${M2(pl.areaPiezas)} útiles · ${pl.utiles.length} retazo(s) recuperable(s)</span>
+          </div>
+          ${svgPlano(pl)}
+          <div class="tablon" style="margin-top:10px"><table>
+            <thead><tr><th>#</th><th>Pieza</th><th>Medida</th><th>Posición X / Y</th><th>Giro</th></tr></thead>
+            <tbody>${pl.puestas.map((p,j)=>`<tr><td><b>${j+1}</b></td><td>${p.etq}</td><td>${p.w} × ${p.h}</td>
+              <td>${Math.round(p.x)} / ${Math.round(p.y)} mm</td><td>${p.rot?'90°':'—'}</td></tr>`).join('')}</tbody></table></div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <div class="caja"><h3>Retazos que genera este plan<span class="acc"><button class="btn sec chico" onclick="registrarRetazos()">Registrar en depósito</button></span></h3>
+    <div class="tablon"><table><thead><tr><th>Vidrio</th><th>Medida</th><th class="der">Superficie</th><th>Proviene de</th><th>Ubicación sugerida</th></tr></thead>
+    <tbody>${r.nuevosRetazos.length? r.nuevosRetazos.map((n,i)=>`<tr><td>${catPorCod(n.cat).nom}</td><td>${n.a} × ${n.b}</td>
+      <td class="der">${M2(n.area)}</td><td>${n.de}</td><td><span class="eti e-ok">S-${['A','B','C'][i%3]}-0${(i%5)+1}</span></td></tr>`).join('')
+      :'<tr><td colspan="5" class="vacio">Este plan no deja retazos por encima del mínimo.</td></tr>'}</tbody></table></div>
+  </div>`;
+}
+function verDXF(){
+  const dxf = generarDXF(ESTADO.plan.planes);
+  modal('Archivo de corte para la CNC',`
+    <p style="font-family:'Archivo Narrow';color:var(--tinta-2);margin-top:0">Formato DXF R12, capa <b>CORTE</b> para las trayectorias y capa <b>CHAPA</b> para el contorno. La cortadora lo lee directamente; en la instalación real el archivo se descarga o se envía por red a la máquina.</p>
+    <pre class="codigo">${dxf.split('\n').slice(0,70).join('\n')}\n… ${dxf.split('\n').length} líneas en total</pre>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn" onclick="avisar('Archivo enviado a la cortadora (demostración)');cerrarModal()">Enviar a la cortadora</button>
+      <button class="btn sec" onclick="cerrarModal()">Cerrar</button></div>`);
+}
+function mandarAProduccion(){
+  avisar('Plan liberado a producción · el maestro vidriero ya lo ve en su tablero');
+}
+function registrarRetazos(){
+  ESTADO.plan.nuevosRetazos.forEach((n,i)=>{
+    RETAZOS.push({id:uid('RZ'),cat:n.cat,a:n.a,b:n.b,ubic:`S-${['A','B','C'][i%3]}-0${(i%5)+1}`,origen:'Plan del día',fecha:HOY.toISOString().slice(0,10),estado:'Disponible'});
+  });
+  avisar(`${ESTADO.plan.nuevosRetazos.length} retazos registrados con su ubicación`);
+  ir('retazos');
+}
+
+/* ---------------- RETAZOS ---------------- */
+function v_retazos(){
+  const disp = RETAZOS.filter(r=>r.estado==='Disponible');
+  const area = disp.reduce((s,r)=>s+(r.a*r.b)/1e6,0);
+  const valor = disp.reduce((s,r)=>s+((r.a*r.b)/1e6)*catPorCod(r.cat).precio,0);
+  return `
+  <div class="tarjetas k4" style="margin-bottom:14px">
+    <div class="caja kpi frio"><div class="rot">Retazos disponibles</div><div class="val">${disp.length}</div><div class="var">localizados por estante</div></div>
+    <div class="caja kpi"><div class="rot">Superficie recuperable</div><div class="val">${NUM(area,1)}<small> m²</small></div><div class="var">equivale a ${NUM(area/7.06,1)} chapas</div></div>
+    <div class="caja kpi"><div class="rot">Valor inmovilizado</div><div class="val">${BS(valor)}</div><div class="var">a precio de venta</div></div>
+    <div class="caja kpi calor"><div class="rot">Antigüedad media</div><div class="val">5<small> días</small></div><div class="var">se dan de baja a los 90 días</div></div>
+  </div>
+  <div class="caja" style="margin-bottom:14px">
+    <h3>Buscar retazo para una medida</h3>
+    <div class="cuerpo"><div class="fila">
+      <div class="campo"><label>Tipo de vidrio</label><select id="rCat">${CATALOGO.map(c=>`<option value="${c.cod}">${c.nom}</option>`).join('')}</select></div>
+      <div class="campo"><label>Ancho (mm)</label><input id="rA" type="number" value="900"></div>
+      <div class="campo"><label>Alto (mm)</label><input id="rB" type="number" value="700"></div>
+      <button class="btn fijo" onclick="buscarRetazo()">Buscar</button>
+    </div><div id="rResultado" style="margin-top:12px"></div></div>
+  </div>
+  <div class="caja"><h3>Depósito de sobras<span class="acc"><button class="btn sec chico" onclick="avisar('Use la aplicación móvil para dar de alta un retazo con lectura de código')">Registrar retazo</button></span></h3>
+    <div class="tablon"><table>
+      <thead><tr><th>Código</th><th>Vidrio</th><th>Medida</th><th class="der">Superficie</th><th>Ubicación</th><th>Origen</th><th>Ingreso</th><th>Estado</th></tr></thead>
+      <tbody id="tRetazos"></tbody></table></div></div>`;
+}
+function tras_retazos(){ pintarRetazos(); }
+function pintarRetazos(){
+  document.getElementById('tRetazos').innerHTML = RETAZOS.map(r=>`<tr>
+    <td><b>${r.id}</b></td><td>${catPorCod(r.cat).nom}</td><td>${r.a} × ${r.b}</td>
+    <td class="der">${M2((r.a*r.b)/1e6)}</td><td><span class="eti e-ok">${r.ubic}</span></td>
+    <td>${r.origen}</td><td>${fechaCorta(r.fecha)}</td>
+    <td><span class="eti ${r.estado==='Disponible'?'e-ok':'e-cal'}">${r.estado}</span></td></tr>`).join('');
+}
+function buscarRetazo(){
+  const cod=$('rCat').value,a=+$('rA').value,b=+$('rB').value;
+  const cand = RETAZOS.filter(r=>r.cat===cod&&r.estado==='Disponible')
+    .map(r=>{
+      const directo = r.a>=a&&r.b>=b, girado = r.a>=b&&r.b>=a;
+      if(!directo&&!girado) return null;
+      const sobra = (r.a*r.b)/1e6 - (a*b)/1e6;
+      return {r,girado:!directo,sobra};
+    }).filter(Boolean).sort((x,y)=>x.sobra-y.sobra);
+  const e=document.getElementById('rResultado');
+  if(!cand.length){
+    e.innerHTML=`<div class="aviso rojo"><div><b>No hay retazo que sirva</b><p>Corte de chapa nueva de ${catPorCod(cod).nom}. El sistema dejará el sobrante registrado automáticamente.</p></div>
+      <button class="btn sec chico" onclick="ir('optimizador')">Ir al optimizador</button></div>`;
+    return;
+  }
+  const m=cand[0];
+  e.innerHTML = `<div class="aviso verde"><div><b>Use el retazo ${m.r.id} · estante ${m.r.ubic}</b>
+    <p>Mide ${m.r.a} × ${m.r.b} mm${m.girado?' (colocar la pieza girada 90°)':''}. Quedan ${M2(m.sobra)} de sobra, que vuelven al depósito si superan ${PLANTA.retazoMin.ancho} × ${PLANTA.retazoMin.alto} mm.</p></div>
+    <button class="btn chico" onclick="avisar('Retazo ${m.r.id} reservado para la orden')">Reservar</button></div>
+    ${cand.length>1?`<table style="margin-top:8px"><thead><tr><th>Alternativas</th><th>Medida</th><th>Ubicación</th><th class="der">Sobra</th></tr></thead>
+      <tbody>${cand.slice(1,4).map(c=>`<tr><td>${c.r.id}</td><td>${c.r.a} × ${c.r.b}</td><td>${c.r.ubic}</td><td class="der">${M2(c.sobra)}</td></tr>`).join('')}</tbody></table>`:''}`;
+}
+
+/* ---------------- PRODUCCIÓN ---------------- */
+function v_produccion(){
+  const cola = ETAPAS.slice(2,8);
+  return `
+  <div class="aviso"><div><b>Tablero de planta</b><p>Cada pieza avanza de una etapa a la siguiente con lectura de código. El cliente ve el mismo avance desde su enlace.</p></div></div>
+  <div class="tarjetas" style="grid-template-columns:repeat(${cola.length},1fr);gap:10px;margin-top:14px">
+    ${cola.map(e=>{
+      const l=PEDIDOS.filter(p=>p.etapa===e);
+      return `<div class="caja"><h3 style="font-size:13px">${ETAPA_ICONO[e]} ${e}<span class="acc"><span class="eti e-gris">${l.length}</span></span></h3>
+        <div class="cuerpo" style="padding:10px;display:flex;flex-direction:column;gap:8px">
+          ${l.length?l.map(p=>{const c=CLIENTES.find(x=>x.id===p.cli);
+            return `<div style="border:1px solid var(--linea);border-left:3px solid ${p.urgente?'var(--horno)':'var(--filo)'};border-radius:2px;padding:8px;cursor:pointer" onclick="verPedido('${p.id}')">
+              <b style="font-size:13px">${p.id}</b>
+              <div style="font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2)">${c.nom}</div>
+              <div style="font-family:'Archivo Narrow';font-size:12px">${NUM(p.m2,1)} m² · entrega ${fechaCorta(p.entrega)}</div></div>`;}).join('')
+            :'<div class="vacio" style="padding:14px;font-size:12px">Sin trabajos</div>'}
+        </div></div>`;}).join('')}
+  </div>
+  <div class="tarjetas k2" style="margin-top:14px">
+    <div class="caja"><h3>Carga del horno de hoy</h3><div class="cuerpo">
+      <dl class="malla-lin">
+        <dt>Ciclos completados</dt><dd>${HORNO.ciclosHoy} de 9</dd>
+        <dt>Superficie templada</dt><dd>${NUM(38.4,1)} m²</dd>
+        <dt>Roturas del día</dt><dd>0 piezas</dd>
+        <dt>Temperatura de ciclo</dt><dd>701 °C · 4 min 20 s</dd>
+      </dl>
+      <div style="margin-top:12px">${barras(HORNO.temperatura.map((t,i)=>({d:i*30+'s',v:t})),110,'var(--horno)')}</div>
+    </div></div>
+    <div class="caja"><h3>Productividad del turno</h3><div class="cuerpo">
+      <table><thead><tr><th>Operario</th><th>Etapa</th><th class="der">m² del turno</th><th class="der">Merma</th></tr></thead>
+      <tbody>
+        <tr><td>Julio Condori</td><td>Corte</td><td class="der">48,2</td><td class="der">4,1 %</td></tr>
+        <tr><td>Wilson Choque</td><td>Temple</td><td class="der">38,4</td><td class="der">6,2 %</td></tr>
+        <tr><td>Ramiro Tola</td><td>Pulido y lavado</td><td class="der">52,0</td><td class="der">1,3 %</td></tr>
+      </tbody></table></div></div>
+  </div>`;
+}
+
+/* ---------------- HORNO ---------------- */
+function v_horno(){
+  const rotM2=HORNO.roturas.reduce((s,r)=>s+r.m2,0), costo=HORNO.roturas.reduce((s,r)=>s+r.costo,0);
+  const porCausa={}; HORNO.roturas.forEach(r=>porCausa[r.causa]=(porCausa[r.causa]||0)+r.piezas);
+  const criticos=HORNO.componentes.filter(c=>c.estado!=='OK');
+  return `
+  ${criticos.map(c=>`<div class="aviso ${c.estado==='Crítico'?'rojo':''}"><div><b>${c.comp} · ${c.estado.toLowerCase()}</b>
+    <p>${c.nota} · Último servicio ${fecha(c.ultima)} · Próximo ${fecha(c.proxima)}</p></div>
+    <button class="btn sec chico" onclick="ordenTrabajo('${c.comp.replace(/'/g,'')}')">Abrir orden de trabajo</button></div>`).join('')}
+
+  <div class="tarjetas k4" style="margin:14px 0">
+    <div class="caja kpi"><div class="rot">Horas de operación</div><div class="val">${NUM(HORNO.horas)}</div><div class="var">${HORNO.modelo.split('·')[0]} · ${HORNO.año}</div></div>
+    <div class="caja kpi calor"><div class="rot">Roturas en 10 días</div><div class="val">${HORNO.roturas.reduce((s,r)=>s+r.piezas,0)}<small> piezas</small></div><div class="var baja">${NUM(rotM2,1)} m² · ${BS(costo)}</div></div>
+    <div class="caja kpi"><div class="rot">Tasa de rotura</div><div class="val">3,9<small> %</small></div><div class="var">meta interna: 2 %</div></div>
+    <div class="caja kpi frio"><div class="rot">Ciclos entre fallas</div><div class="val">17</div><div class="var">MTBF sobre 51 ciclos</div></div>
+  </div>
+
+  <div class="tarjetas k2">
+    <div class="caja"><h3>Plan de mantenimiento</h3><div class="tablon"><table>
+      <thead><tr><th>Componente</th><th>Estado</th><th>Último</th><th>Próximo</th><th class="der">Horas</th></tr></thead>
+      <tbody>${HORNO.componentes.map(c=>`<tr><td><b>${c.comp}</b><br><span style="color:var(--tinta-2)">${c.nota}</span></td>
+        <td><span class="eti ${c.estado==='OK'?'e-ok':(c.estado==='Alerta'?'e-cal':'e-mal')}">${c.estado}</span></td>
+        <td>${fechaCorta(c.ultima)}</td><td>${fechaCorta(c.proxima)}</td><td class="der">${NUM(c.horas)}</td></tr>`).join('')}
+      </tbody></table></div></div>
+    <div>
+      <div class="caja" style="margin-bottom:14px"><h3>Ciclos y roturas por día</h3><div class="cuerpo">
+        ${barras(HORNO.ciclos.map(c=>({d:fechaCorta(c.f),v:c.n})),110)}
+        <div style="margin-top:6px">${barras(HORNO.ciclos.map(c=>({d:'',v:c.rotas})),60,'var(--rotura)')}</div>
+        <p style="font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2)">Barras superiores: ciclos. Inferiores en rojo: piezas estalladas.</p>
+      </div></div>
+      <div class="caja"><h3>Causas registradas</h3><div class="cuerpo">
+        <dl class="malla-lin">${Object.entries(porCausa).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<dt>${k}</dt><dd>${v} piezas</dd>`).join('')}</dl>
+        <p style="font-family:'Archivo Narrow';font-size:12.5px;color:var(--tinta-2);margin-top:10px">
+          Dos de cada tres estallidos ocurren en el enfriamiento y coinciden con la caída de presión del compresor. La correlación se calcula con los ciclos registrados, no con memoria del operador.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="caja" style="margin-top:14px"><h3>Registro de roturas<span class="acc"><button class="btn sec chico" onclick="avisar('Registro de rotura · se carga desde la aplicación móvil en planta')">Registrar rotura</button></span></h3>
+    <div class="tablon"><table>
+      <thead><tr><th>Fecha</th><th>Pedido</th><th>Vidrio</th><th class="der">Piezas</th><th class="der">m²</th><th>Causa</th><th class="der">Costo</th></tr></thead>
+      <tbody>${HORNO.roturas.map(r=>`<tr><td>${fechaCorta(r.f)}</td><td>${r.pedido}</td><td>${catPorCod(r.cat).nom}</td>
+        <td class="der">${r.piezas}</td><td class="der">${NUM(r.m2,1)}</td><td>${r.causa}</td><td class="der">${BS(r.costo)}</td></tr>`).join('')}
+      </tbody></table></div></div>`;
+}
+function ordenTrabajo(comp){
+  modal('Orden de trabajo de mantenimiento',`
+    <div class="campo"><label>Componente</label><input value="${comp}" readonly></div>
+    <div class="fila">
+      <div class="campo"><label>Tipo</label><select><option>Correctivo</option><option selected>Preventivo</option><option>Predictivo</option></select></div>
+      <div class="campo"><label>Responsable</label><select><option>Wilson Choque</option><option>Servicio externo · Tempervidro</option></select></div>
+      <div class="campo"><label>Fecha programada</label><input type="date" value="2026-09-19"></div>
+    </div>
+    <div class="campo"><label>Detalle</label><textarea rows="3">Verificar presión de línea en ciclo completo, revisar filtros y purgas del compresor, medir caída entre 6,2 y 5,4 bar.</textarea></div>
+    <div class="campo"><label>Detiene producción</label><select><option>Sí · bloquear agenda de temple</option><option selected>No · fuera de turno</option></select></div>
+    <div style="display:flex;gap:8px"><button class="btn" onclick="avisar('Orden de trabajo creada · MT-0092');cerrarModal()">Crear orden</button>
+      <button class="btn sec" onclick="cerrarModal()">Cancelar</button></div>`);
+}
+
+/* ============================================================
+   VISTAS · inventario, importaciones, aluminio, caja, personal,
+            asistente de WhatsApp, reportes
+   ============================================================ */
+
+function v_inventario(){
+  const bajos = CATALOGO.filter(c=>c.vid<c.min);
+  const bajosAlm = CATALOGO.filter(c=>c.alm < c.min*4);
+  return `
+  ${bajos.length?`<div class="aviso"><div><b>${bajos.length} tipos por debajo del mínimo en vidriería</b>
+    <p>El sistema propone el traslado desde el almacén de importación con la cantidad exacta para volver al nivel de reposición.</p></div>
+    <button class="btn chico" onclick="proponerTraslado()">Generar traslados</button></div>`:''}
+  ${bajosAlm.length?`<div class="aviso rojo"><div><b>Reposición de importación: ${bajosAlm.map(b=>b.nom).join(', ')}</b>
+    <p>Con el consumo de los últimos 60 días, la cobertura cae por debajo del tiempo de tránsito desde China (78 días puerta a puerta).</p></div>
+    <button class="btn sec chico" onclick="ir('importaciones')">Ver importaciones</button></div>`:''}
+
+  <div class="pestanas" id="pesInv">
+    <button class="on" onclick="pintarInv('vid',this)">Vidriería · planta</button>
+    <button onclick="pintarInv('alm',this)">Almacén de importación</button>
+    <button onclick="pintarInv('mov',this)">Movimientos</button>
+  </div>
+  <div class="caja"><h3 id="invTit">Existencias en vidriería</h3><div class="tablon" id="invTabla"></div></div>`;
+}
+function tras_inventario(){ pintarInv('vid'); }
+function pintarInv(modo,el){
+  if(el){document.querySelectorAll('#pesInv button').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+  const t=document.getElementById('invTabla'), tit=document.getElementById('invTit');
+  const areaChapa = (PLANTA.chapa.ancho*PLANTA.chapa.alto)/1e6;
+  if(modo==='mov'){
+    tit.textContent='Movimientos de los últimos días';
+    const movs=[
+      {f:'2026-09-18T08:12',t:'Traslado',cat:'FL06I',c:12,de:'Almacén A-03',a:'Vidriería V-A3',u:'Elena Apaza'},
+      {f:'2026-09-18T07:50',t:'Salida a corte',cat:'FL08I',c:4,de:'Vidriería V-A4',a:'Mesa 1 · PD-2609',u:'Julio Condori'},
+      {f:'2026-09-17T16:20',t:'Recepción',cat:'FL04I',c:160,de:'Contenedor MSKU 774213-1',a:'Almacén A-01',u:'Elena Apaza'},
+      {f:'2026-09-17T11:05',t:'Rotura',cat:'FL08I',c:2,de:'Horno',a:'Baja por rotura',u:'Wilson Choque'},
+      {f:'2026-09-16T15:40',t:'Traslado',cat:'ES04I',c:6,de:'Almacén C-02',a:'Vidriería V-C2',u:'Elena Apaza'}];
+    t.innerHTML=`<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Vidrio</th><th class="der">Chapas</th><th>Desde</th><th>Hacia</th><th>Responsable</th></tr></thead>
+      <tbody>${movs.map(m=>`<tr><td>${fechaCorta(m.f)} ${hora(m.f)}</td>
+      <td><span class="eti ${m.t==='Rotura'?'e-mal':(m.t==='Recepción'?'e-ok':'e-gris')}">${m.t}</span></td>
+      <td>${catPorCod(m.cat).nom}</td><td class="der">${m.c}</td><td>${m.de}</td><td>${m.a}</td><td>${m.u}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
+  const alm = modo==='alm';
+  tit.textContent = alm?'Existencias en almacén de importación':'Existencias en vidriería';
+  t.innerHTML = `<table>
+    <thead><tr><th>Código</th><th>Vidrio</th><th>Ubicación</th><th class="der">Chapas</th><th class="der">m²</th><th class="der">Mínimo</th><th>Cobertura</th><th class="der">Valor</th><th></th></tr></thead>
+    <tbody>${CATALOGO.map(c=>{
+      const q = alm?c.alm:c.vid, min = alm?c.min*4:c.min;
+      const p = Math.min(1,q/(min*2));
+      return `<tr><td><b>${c.cod}</b></td><td>${c.nom}</td><td><span class="eti e-gris">${alm?'A-'+c.ubic.slice(2):c.ubic}</span></td>
+        <td class="der"><b>${q}</b></td><td class="der">${NUM(q*areaChapa,1)}</td><td class="der">${min}</td>
+        <td><div class="barrita" style="width:110px"><i class="${q<min?'lleno':(q<min*1.4?'alto':'')}" style="width:${p*100}%"></i></div></td>
+        <td class="der">${BS(q*areaChapa*c.precio*0.55)}</td>
+        <td>${q<min?`<button class="btn chico" onclick="${alm?"ir('importaciones')":'proponerTraslado()'}">${alm?'Importar':'Traer'}</button>`:''}</td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+function proponerTraslado(){
+  const bajos = CATALOGO.filter(c=>c.vid<c.min);
+  modal('Traslado de almacén a vidriería',`
+    <p style="font-family:'Archivo Narrow';color:var(--tinta-2);margin-top:0">Cantidades calculadas para volver al nivel de reposición con el consumo de las últimas cuatro semanas.</p>
+    <table><thead><tr><th>Vidrio</th><th class="der">En vidriería</th><th class="der">Mínimo</th><th class="der">A trasladar</th><th>Origen</th></tr></thead>
+    <tbody>${bajos.map(c=>`<tr><td>${c.nom}</td><td class="der">${c.vid}</td><td class="der">${c.min}</td>
+      <td class="der"><b>${c.min*2-c.vid}</b></td><td>Almacén A-${c.ubic.slice(2)}</td></tr>`).join('')}</tbody></table>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn" onclick="avisar('Orden de traslado enviada a la aplicación móvil de almacén');cerrarModal()">Enviar a almacén</button>
+      <button class="btn sec" onclick="cerrarModal()">Cancelar</button></div>`);
+}
+
+/* ---------------- IMPORTACIONES ---------------- */
+function v_importaciones(){
+  return `
+  <div class="tarjetas k4" style="margin-bottom:14px">
+    <div class="caja kpi"><div class="rot">Órdenes en curso</div><div class="val">${IMPORTACIONES.filter(i=>i.etapa!=='En almacén').length}</div><div class="var">3 proveedores en China</div></div>
+    <div class="caja kpi"><div class="rot">Capital en tránsito</div><div class="val">${BS(IMPORTACIONES.filter(i=>i.etapa!=='En almacén').reduce((s,i)=>s+i.valor,0))}</div><div class="var">CIF más aranceles</div></div>
+    <div class="caja kpi calor"><div class="rot">Tránsito promedio</div><div class="val">78<small> días</small></div><div class="var">Shenzhen → Arica → La Paz</div></div>
+    <div class="caja kpi frio"><div class="rot">Rotura en tránsito</div><div class="val">0,6<small> %</small></div><div class="var">3 chapas en el último contenedor</div></div>
+  </div>
+  ${IMPORTACIONES.map(i=>{
+    const idx=ETAPAS_IMPO.indexOf(i.etapa);
+    const recibido=i.items.reduce((s,x)=>s+x.recibido,0), total=i.items.reduce((s,x)=>s+x.cant,0);
+    return `<div class="caja" style="margin-bottom:14px">
+      <h3>${i.oc} · ${i.prov}
+        <span class="eti ${i.etapa==='En almacén'?'e-ok':'e-cal'}" style="margin-left:6px">${i.etapa}</span>
+        <span class="acc"><span style="font-family:'Archivo Narrow';color:var(--tinta-2)">Contenedor ${i.contenedor} · llegada ${fecha(i.eta)}</span>
+        ${i.etapa==='Aduana La Paz'?`<button class="btn chico" onclick="conferir('${i.oc}')">Conferir recepción</button>`:''}</span></h3>
+      <div class="cuerpo">
+        <div style="display:flex;gap:4px;margin-bottom:14px">
+          ${ETAPAS_IMPO.map((e,j)=>`<div style="flex:1;text-align:center">
+            <div style="height:4px;background:${j<=idx?'var(--filo)':'var(--linea)'};border-radius:2px"></div>
+            <div style="font-family:'Archivo Narrow';font-size:11.5px;color:${j<=idx?'var(--tinta)':'var(--tinta-2)'};margin-top:4px">${e}</div></div>`).join('')}
+        </div>
+        <table><thead><tr><th>Vidrio</th><th class="der">Compradas</th><th class="der">Recibidas</th><th class="der">Rotas</th><th class="der">Valor CIF</th></tr></thead>
+          <tbody>${i.items.map(x=>`<tr><td>${catPorCod(x.cat).nom}</td><td class="der">${x.cant}</td>
+            <td class="der">${x.recibido||'—'}</td><td class="der" style="color:${x.roto?'var(--rotura)':'inherit'}">${x.roto||'—'}</td>
+            <td class="der">${BS(x.cant*catPorCod(x.cat).precio*7.06*0.42)}</td></tr>`).join('')}
+            <tr><td colspan="4"><b>Avance de recepción</b></td><td class="der"><b>${recibido}/${total}</b></td></tr></tbody></table>
+      </div></div>`;}).join('')}`;
+}
+function conferir(oc){
+  const i=IMPORTACIONES.find(x=>x.oc===oc);
+  modal(`Conferencia de recepción · ${oc}`,`
+    <div class="aviso"><div><b>Esta conferencia se hace con la aplicación móvil</b>
+      <p>El responsable de almacén lee el código de cada paquete, cuenta las chapas y fotografía las roturas. Aquí se ve la conciliación contra la factura del proveedor.</p></div></div>
+    <table style="margin-top:12px"><thead><tr><th>Vidrio</th><th class="der">Según factura</th><th class="der">Contadas</th><th class="der">Rotas</th><th>Resultado</th></tr></thead>
+    <tbody>${i.items.map(x=>`<tr><td>${catPorCod(x.cat).nom}</td><td class="der">${x.cant}</td>
+      <td class="der"><input type="number" value="${x.cant}" style="width:74px;border:1px solid var(--linea-fuerte);border-radius:2px;padding:3px 6px"></td>
+      <td class="der"><input type="number" value="0" style="width:60px;border:1px solid var(--linea-fuerte);border-radius:2px;padding:3px 6px"></td>
+      <td><span class="eti e-ok">conforme</span></td></tr>`).join('')}</tbody></table>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" onclick="avisar('Recepción conferida · existencias del almacén actualizadas');cerrarModal()">Confirmar ingreso al almacén</button>
+      <button class="btn sec" onclick="cerrarModal()">Cerrar</button></div>`);
+}
+
+/* ---------------- ALUMINIO ---------------- */
+function v_aluminio(){
+  const valor=ALUMINIO.reduce((s,a)=>s+a.barras*a.precio*6,0);
+  return `
+  <div class="tarjetas k4" style="margin-bottom:14px">
+    <div class="caja kpi"><div class="rot">Barras en existencia</div><div class="val">${ALUMINIO.reduce((s,a)=>s+a.barras,0)}</div><div class="var">barras de 6 m</div></div>
+    <div class="caja kpi"><div class="rot">Valor de perfilería</div><div class="val">${BS(valor)}</div><div class="var">3 líneas activas</div></div>
+    <div class="caja kpi calor"><div class="rot">Bajo mínimo</div><div class="val">${ALUMINIO.filter(a=>a.barras<a.min).length}</div><div class="var">reponer con el proveedor local</div></div>
+    <div class="caja kpi frio"><div class="rot">Ventas del mes</div><div class="val">${BS(48600)}</div><div class="var">17 % de la facturación</div></div>
+  </div>
+  <div class="caja" style="margin-bottom:14px"><h3>Perfilería y herrajes<span class="acc"><button class="btn sec chico" onclick="calcularVentana()">Calcular una ventana</button></span></h3>
+    <div class="tablon"><table>
+      <thead><tr><th>Código</th><th>Producto</th><th>Línea</th><th>Acabado</th><th class="der">Barras 6 m</th><th class="der">Mínimo</th><th class="der">Precio/m</th><th class="der">Valor</th></tr></thead>
+      <tbody>${ALUMINIO.map(a=>`<tr><td><b>${a.cod}</b></td><td>${a.nom}</td><td>${a.linea}</td><td>${a.acab}</td>
+        <td class="der"><b>${a.barras}</b> ${a.barras<a.min?'<span class="eti e-mal">bajo</span>':''}</td>
+        <td class="der">${a.min}</td><td class="der">${BS(a.precio)}</td><td class="der">${BS(a.barras*a.precio*6)}</td></tr>`).join('')}
+      </tbody></table></div></div>
+  <div class="caja"><h3>Conjuntos más vendidos</h3><div class="cuerpo">
+    <table><thead><tr><th>Conjunto</th><th>Componentes</th><th class="der">Precio referencia</th></tr></thead><tbody>
+      <tr><td><b>Ventana corrediza 1,50 × 1,10 m</b></td><td>Serie 25 · marco, 2 hojas, junquillo, vidrio 5 mm</td><td class="der">${BS(1420)}</td></tr>
+      <tr><td><b>Box corredizo 1,20 × 1,90 m</b></td><td>Perfil U cromado, herrajes, 2 hojas templadas de 8 mm</td><td class="der">${BS(3180)}</td></tr>
+      <tr><td><b>Puerta de abrir 0,90 × 2,10 m</b></td><td>Serie 3831, vidrio laminado 3+3, cerradura</td><td class="der">${BS(2640)}</td></tr>
+    </tbody></table></div></div>`;
+}
+function calcularVentana(){
+  modal('Ventana corrediza · cálculo de materiales',`
+    <div class="fila" style="margin-bottom:12px">
+      <div class="campo"><label>Ancho (m)</label><input type="number" value="1.50" step="0.05"></div>
+      <div class="campo"><label>Alto (m)</label><input type="number" value="1.10" step="0.05"></div>
+      <div class="campo"><label>Línea</label><select><option>Serie 25 corrediza</option><option>Serie 3831 abrir</option></select></div>
+      <div class="campo"><label>Vidrio</label><select><option>Float incoloro 5 mm</option><option>Float bronce 6 mm</option></select></div>
+    </div>
+    <table><thead><tr><th>Material</th><th class="der">Cantidad</th><th class="der">Importe</th></tr></thead><tbody>
+      <tr><td>Serie 25 · marco corredizo</td><td class="der">5,20 m</td><td class="der">${BS(270.4)}</td></tr>
+      <tr><td>Serie 25 · hoja corrediza</td><td class="der">8,40 m</td><td class="der">${BS(403.2)}</td></tr>
+      <tr><td>Junquillo Serie 25</td><td class="der">7,60 m</td><td class="der">${BS(144.4)}</td></tr>
+      <tr><td>Float incoloro 5 mm · 2 hojas 0,73 × 1,05</td><td class="der">1,53 m²</td><td class="der">${BS(185.1)}</td></tr>
+      <tr><td>Felpa, rodamientos y cierre</td><td class="der">1 juego</td><td class="der">${BS(148)}</td></tr>
+      <tr><td>Mano de obra de armado</td><td class="der">2,5 h</td><td class="der">${BS(180)}</td></tr>
+      <tr><td><b>Total</b></td><td></td><td class="der"><b>${BS(1331.1)}</b></td></tr>
+    </tbody></table>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" onclick="avisar('Conjunto agregado al presupuesto');cerrarModal()">Agregar al presupuesto</button>
+    <button class="btn sec" onclick="cerrarModal()">Cerrar</button></div>`);
+}
+
+/* ---------------- CAJA ---------------- */
+function v_caja(){
+  const ing=CAJA.filter(c=>c.tipo==='Ingreso').reduce((s,c)=>s+c.monto,0);
+  const egr=CAJA.filter(c=>c.tipo==='Egreso').reduce((s,c)=>s+c.monto,0);
+  const efectivo=CAJA.filter(c=>c.medio==='Efectivo').reduce((s,c)=>s+(c.tipo==='Ingreso'?c.monto:-c.monto),0);
+  const porCat={}; CAJA.filter(c=>c.tipo==='Egreso').forEach(c=>porCat[c.cat]=(porCat[c.cat]||0)+c.monto);
+  return `
+  <div class="tarjetas k4" style="margin-bottom:14px">
+    <div class="caja kpi frio"><div class="rot">Saldo actual</div><div class="val">${BS(SALDO_INICIAL+ing-egr)}</div><div class="var">saldo inicial ${BS(SALDO_INICIAL)}</div></div>
+    <div class="caja kpi"><div class="rot">Ingresos de la semana</div><div class="val">${BS(ing)}</div><div class="var sube">9 cobros</div></div>
+    <div class="caja kpi"><div class="rot">Egresos de la semana</div><div class="val">${BS(egr)}</div><div class="var baja">6 pagos</div></div>
+    <div class="caja kpi calor"><div class="rot">Efectivo en caja fuerte</div><div class="val">${BS(efectivo+12000)}</div><div class="var">arqueo del turno pendiente</div></div>
+  </div>
+  <div class="tarjetas" style="grid-template-columns:2fr 1fr;gap:14px">
+    <div class="caja"><h3>Movimientos<span class="acc">
+      <button class="btn chico" onclick="nuevoMovimiento('Ingreso')">Registrar ingreso</button>
+      <button class="btn sec chico" onclick="nuevoMovimiento('Egreso')">Registrar egreso</button></span></h3>
+      <div class="tablon"><table>
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Referencia</th><th>Medio</th><th class="der">Importe</th></tr></thead>
+        <tbody>${CAJA.map(c=>`<tr><td>${fechaCorta(c.f)} ${hora(c.f)}</td>
+          <td><b>${c.desc}</b><br><span style="color:var(--tinta-2)">${c.cat}</span></td><td>${c.ref}</td><td>${c.medio}</td>
+          <td class="der" style="color:${c.tipo==='Ingreso'?'var(--filo)':'var(--rotura)'}"><b>${c.tipo==='Ingreso'?'+':'−'} ${BS(c.monto)}</b></td></tr>`).join('')}
+        </tbody></table></div></div>
+    <div>
+      <div class="caja" style="margin-bottom:14px"><h3>Egresos por rubro</h3><div class="cuerpo">
+        <dl class="malla-lin">${Object.entries(porCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<dt>${k}</dt><dd>${BS(v)}</dd>`).join('')}</dl></div></div>
+      <div class="caja"><h3>Resultado de septiembre</h3><div class="cuerpo">
+        <dl class="malla-lin">
+          <dt>Ventas</dt><dd>${BS(284700)}</dd>
+          <dt>Costo de vidrio</dt><dd>${BS(121400)}</dd>
+          <dt>Mano de obra</dt><dd>${BS(58200)}</dd>
+          <dt>Energía y planta</dt><dd>${BS(21600)}</dd>
+          <dt>Merma por rotura</dt><dd style="color:var(--rotura)">${BS(3626)}</dd>
+          <dt style="color:var(--tinta)"><b>Margen operativo</b></dt><dd style="font-size:17px"><b>${BS(79874)}</b></dd>
+          <dt>Sobre ventas</dt><dd>28,1 %</dd>
+        </dl></div></div>
+    </div>
+  </div>`;
+}
+function nuevoMovimiento(tipo){
+  modal(`Registrar ${tipo.toLowerCase()} de caja`,`
+    <div class="fila" style="margin-bottom:10px">
+      <div class="campo"><label>Rubro</label><select>${(tipo==='Ingreso'?['Cobro de pedido','Venta mostrador','Otros ingresos']:['Insumos','Sueldos','Energía','Mantenimiento','Importación','Otros']).map(o=>`<option>${o}</option>`).join('')}</select></div>
+      <div class="campo"><label>Medio</label><select><option>Efectivo</option><option>Transferencia</option><option>Cheque</option></select></div>
+      <div class="campo"><label>Importe (Bs)</label><input type="number" value="0"></div>
+    </div>
+    <div class="campo"><label>Descripción</label><input placeholder="Detalle del movimiento"></div>
+    <div class="campo"><label>Referencia</label><input placeholder="Pedido, factura o comprobante"></div>
+    <div style="display:flex;gap:8px"><button class="btn" onclick="avisar('Movimiento registrado en caja');cerrarModal()">Registrar</button>
+      <button class="btn sec" onclick="cerrarModal()">Cancelar</button></div>`);
+}
+
+/* ---------------- PERSONAL ---------------- */
+function v_personal(){
+  return `<div class="caja"><h3>Equipo</h3><div class="tablon"><table>
+    <thead><tr><th>Nombre</th><th>Función</th><th>Ingreso</th><th class="der">Ventas del mes</th><th class="der">Comisión</th><th class="der">Pedidos</th><th>Entregas a tiempo</th><th class="der">Merma</th></tr></thead>
+    <tbody>${PERSONAL.map(p=>`<tr><td><b>${p.nom}</b></td><td>${p.rol}</td><td>${fecha(p.ingreso)}</td>
+      <td class="der">${p.ventasMes?BS(p.ventasMes):'—'}</td><td class="der">${p.comision?BS(p.comision):'—'}</td>
+      <td class="der">${p.pedidos||'—'}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="barrita" style="width:80px"><i class="${p.puntualidad<0.9?'alto':''}" style="width:${p.puntualidad*100}%"></i></div>${Math.round(p.puntualidad*100)} %</div></td>
+      <td class="der">${p.merma?NUM(p.merma*100,1)+' %':'—'}</td></tr>`).join('')}
+  </tbody></table></div></div>
+  <div class="aviso verde" style="margin-top:14px"><div><b>Las comisiones salen del sistema, no de una planilla aparte</b>
+    <p>2 % sobre el cobrado. Un pedido entregado fuera de fecha descuenta la mitad de la comisión de esa venta: es la regla que alinea a mostrador con la capacidad real de planta.</p></div></div>`;
+}
+
+/* ---------------- ASISTENTE WHATSAPP ---------------- */
+const SUGERENCIAS=['Necesito 4 vidrios templados de 1200 x 800 de 8 mm',
+  'Cuánto sale un espejo de 90 x 60 biselado',
+  '10 vidrios de 1.4 x 0.8 en 6 mm para mañana',
+  'Tienen vidrio bronce de 6?'];
+function sugerir(i){ document.getElementById('chatTxt').value = SUGERENCIAS[i]; mandarChat(); }
+function v_asistente(){
+  return `
+  <div class="tarjetas" style="grid-template-columns:1fr .8fr;gap:14px;align-items:start">
+    <div class="caja">
+      <h3>Conversación con el cliente<span class="acc"><span class="eti e-ok"><span class="punto"></span> asistente en línea</span></span></h3>
+      <div class="chat" id="chat"></div>
+      <div style="padding:12px;border-top:1px solid var(--linea);display:flex;gap:8px">
+        <input id="chatTxt" placeholder="Escriba como si fuera el cliente…" style="flex:1;border:1px solid var(--linea-fuerte);border-radius:20px;padding:9px 14px"
+          onkeydown="if(event.key==='Enter')mandarChat()">
+        <button class="btn" onclick="mandarChat()">Enviar</button>
+      </div>
+      <div style="padding:0 12px 12px;display:flex;gap:6px;flex-wrap:wrap">
+        ${SUGERENCIAS.map((q,i)=>`<button class="btn sec chico" onclick="sugerir(${i})">${q.slice(0,34)}…</button>`).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="caja" style="margin-bottom:14px"><h3>Qué hace el asistente</h3><div class="cuerpo">
+        <p style="margin:0 0 10px;font-size:13.5px">Interpreta el mensaje del cliente, arma el presupuesto con la lista de precios vigente y consulta la agenda antes de prometer una fecha. Si la pieza no se puede producir, lo dice y propone una alternativa.</p>
+        <dl class="malla-lin">
+          <dt>Respuesta media</dt><dd>9 segundos</dd>
+          <dt>Cotizaciones automáticas</dt><dd>68 % del total</dd>
+          <dt>Pasan a pedido</dt><dd>41 %</dd>
+          <dt>Derivadas a un vendedor</dt><dd>obras y medidas especiales</dd>
+        </dl></div></div>
+      <div class="caja"><h3>Cotizaciones de hoy por WhatsApp</h3><div class="tablon"><table>
+        <thead><tr><th>Hora</th><th>Cliente</th><th class="der">Importe</th><th>Resultado</th></tr></thead><tbody>
+        <tr><td>09:32</td><td>+591 7 4455 221</td><td class="der">${BS(2840)}</td><td><span class="eti e-ok">pedido</span></td></tr>
+        <tr><td>09:14</td><td>Box & Baños</td><td class="der">${BS(9380)}</td><td><span class="eti e-ok">pedido</span></td></tr>
+        <tr><td>08:57</td><td>+591 6 7788 100</td><td class="der">${BS(640)}</td><td><span class="eti e-gris">sin respuesta</span></td></tr>
+        <tr><td>08:40</td><td>Arq. D. Rojas</td><td class="der">${BS(3180)}</td><td><span class="eti e-cal">derivada</span></td></tr>
+      </tbody></table></div></div>
+    </div>
+  </div>`;
+}
+function tras_asistente(){
+  if(!ESTADO.chat.length){
+    ESTADO.chat=[{q:0,t:'Buenos días, ¿me pueden cotizar vidrio templado?'},
+      {q:1,t:'Buenos días. Sí, cotizamos al instante. Indíqueme medida, espesor y cantidad. Ejemplo: «4 piezas de 1200 x 800 en 8 mm templado».'}];
+  }
+  pintarChat();
+}
+function pintarChat(){
+  const c=document.getElementById('chat');
+  c.innerHTML = ESTADO.chat.map(m=>`<div class="msj ${m.q?'bot':'cli'}">${m.t}<span class="hora">${m.q?'VIDRATEMP · ':''}${hora(HOY)}</span></div>`).join('');
+  c.scrollTop=c.scrollHeight;
+}
+function mandarChat(){
+  const t=$('chatTxt').value.trim(); if(!t) return;
+  ESTADO.chat.push({q:0,t}); document.getElementById('chatTxt').value=''; pintarChat();
+  setTimeout(()=>{ ESTADO.chat.push({q:1,t:responder(t)}); pintarChat(); },650);
+}
+function responder(txt){
+  const s=txt.toLowerCase().replace(/,/g,'.');
+  const med=s.match(/(\d+[\.\d]*)\s*(?:x|por|\*)\s*(\d+[\.\d]*)/);
+  const cant=(s.match(/(\d+)\s*(?:vidrios|piezas|unidades|u\b|pzas)/)||s.match(/^(\d+)\s/)||[])[1];
+  const esp=(s.match(/(\d+)\s*(?:mm|milimetros|milímetros)/)||[])[1];
+  const templa=/templ/.test(s), bisel=/bisel/.test(s), espejo=/espejo/.test(s), urg=/urgente|mañana|hoy|rápido|rapido/.test(s);
+  const color=/bronce/.test(s)?'Bronce':(/gris/.test(s)?'Gris':(/reflect/.test(s)?'Plata':'Incoloro'));
+
+  if(/tienen|hay|stock|disponible/.test(s)&&!med){
+    const c=CATALOGO.find(x=>x.color===color&&(!esp||x.esp==+esp))||CATALOGO[2];
+    return `Sí, tenemos ${c.nom} en existencia (${c.vid} chapas en planta y ${c.alm} en almacén). El precio es ${BS(c.precio)} por m². ¿Qué medidas necesita?`;
+  }
+  if(!med) return 'Para cotizar necesito la medida en milímetros o metros. Por ejemplo: «1200 x 800» o «1.20 x 0.80». Dígame también el espesor y si lo quiere templado.';
+
+  const aMm = v => v<10 ? v*1000 : (v<330 ? v*10 : v);   // metros · centímetros · milímetros
+  let a=Math.round(aMm(parseFloat(med[1]))), b=Math.round(aMm(parseFloat(med[2])));
+  const n=cant?+cant:1;
+  let cod;
+  if(espejo) cod='ES04I';
+  else{
+    const e=esp?+esp:(templa?8:6);
+    cod=(CATALOGO.find(c=>c.esp===e&&c.color===color)||CATALOGO.find(c=>c.esp===e)||CATALOGO[2]).cod;
+  }
+  const procs=[]; if(templa){procs.push('pulido','temple');} else if(bisel) procs.push('bisel'); else procs.push('pulido');
+  const errores=validarPieza(cod,a,b,procs).filter(v=>v.t==='error');
+  const cat=catPorCod(cod);
+  if(errores.length){
+    let alt='';
+    if(templa&&!cat.templable) alt=' Le propongo laminado 3+3, que cumple la misma función de seguridad sin pasar por el horno.';
+    else if(templa) alt=` La cama del horno mide ${PLANTA.hornoUtil.ancho} × ${PLANTA.hornoUtil.alto} mm; podemos dividir la pieza en dos o entregarla sin templar.`;
+    return `${errores[0].m}${alt} ¿Le preparo la alternativa?`;
+  }
+  const q=cotizarPieza(cod,a,b,n,procs,urg);
+  const ent=prometerEntrega(q.m2, templa, urg);
+  const dias=Math.round((ent.fecha-HOY)/86400000);
+  return `${n} pieza(s) de ${cat.nom}, ${a} × ${b} mm${templa?', canto pulido y templado':(bisel?', con bisel de 20 mm':', canto pulido')}.
+
+Precio unitario: ${BS(q.unit)}
+Total con IVA: ${BS(q.total)}
+Superficie: ${M2(q.m2)}
+
+Entrega comprometida: ${fecha(ent.fecha)} a las ${hora(ent.fecha)} (${dias<=1?'24 horas':dias+' días'}), con capacidad de planta ya reservada.${urg?'\nIncluye recargo de 22 % por prioridad.':''}
+
+¿Confirmo el pedido? Con el 50 % de anticipo le envío el enlace para seguir su vidrio paso a paso.`;
+}
+
+/* ---------------- REPORTES Y TARIFAS ---------------- */
+function v_reportes(){
+  return `
+  <div class="pestanas" id="pesRep">
+    <button class="on" onclick="pintarRep('precios',this)">Lista de precios</button>
+    <button onclick="pintarRep('procesos',this)">Procesos</button>
+    <button onclick="pintarRep('resultado',this)">Resultado del mes</button>
+  </div>
+  <div id="repCuerpo"></div>`;
+}
+function tras_reportes(){ pintarRep('precios'); }
+function pintarRep(m,el){
+  if(el){document.querySelectorAll('#pesRep button').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+  const c=document.getElementById('repCuerpo');
+  const areaChapa=(PLANTA.chapa.ancho*PLANTA.chapa.alto)/1e6;
+  if(m==='precios'){
+    c.innerHTML=`<div class="caja"><h3>Precios de venta vigentes<span class="acc"><button class="btn sec chico" onclick="avisar('Ajuste de precios · requiere perfil de dueño')">Ajustar lista</button></span></h3>
+    <div class="tablon"><table><thead><tr><th>Código</th><th>Vidrio</th><th class="der">Espesor</th><th class="der">Bs/m²</th><th class="der">Chapa completa</th><th class="der">1,20 × 0,80</th><th class="der">Templado 1,20 × 0,80</th><th>Templable</th></tr></thead>
+    <tbody>${CATALOGO.map(x=>{
+      const base=0.96*x.precio, tpl=x.templable? 0.96*x.precio+0.96*PROCESOS[2].precio+4*PROCESOS[0].precio : null;
+      return `<tr><td><b>${x.cod}</b></td><td>${x.nom}</td><td class="der">${x.esp} mm</td><td class="der">${BS(x.precio)}</td>
+      <td class="der">${BS(x.precio*areaChapa)}</td><td class="der">${BS(base)}</td>
+      <td class="der">${tpl?BS(tpl):'—'}</td><td>${x.templable?'<span class="eti e-ok">sí</span>':'<span class="eti e-gris">no</span>'}</td></tr>`;}).join('')}
+    </tbody></table></div></div>`;
+  } else if(m==='procesos'){
+    c.innerHTML=`<div class="caja"><h3>Tarifas de proceso</h3><div class="tablon"><table>
+      <thead><tr><th>Proceso</th><th>Unidad</th><th class="der">Precio</th><th>Condiciones</th></tr></thead>
+      <tbody>${PROCESOS.map(p=>`<tr><td><b>${p.nom}</b></td><td>${p.unidad}</td><td class="der">${BS(p.precio)}</td><td>${p.desc}</td></tr>`).join('')}
+      <tr><td><b>Mínimo facturable</b></td><td>m² por pieza</td><td class="der">${MIN_FACTURABLE}</td><td>Toda pieza menor se cobra como ${MIN_FACTURABLE} m²</td></tr>
+      <tr><td><b>Recargo por prioridad</b></td><td>% sobre total</td><td class="der">${RECARGO_URGENTE*100} %</td><td>Reordena la agenda del día siguiente</td></tr>
+      </tbody></table></div></div>`;
+  } else {
+    c.innerHTML=`<div class="tarjetas k2">
+      <div class="caja"><h3>Ventas por tipo de vidrio</h3><div class="cuerpo">
+        <table><tbody>
+        ${[['Float incoloro 8 mm templado',98400,0.35],['Float incoloro 6 mm',62100,0.22],['Reflectivo plata 6 mm',41800,0.15],
+           ['Espejo 4 mm',28600,0.10],['Laminado 3+3',24900,0.09],['Aluminio y herrajes',28900,0.09]].map(r=>`
+          <tr><td>${r[0]}</td><td style="width:45%"><div class="barrita" style="width:100%"><i style="width:${r[2]*280}%"></i></div></td>
+          <td class="der"><b>${BS(r[1])}</b></td></tr>`).join('')}
+        </tbody></table></div></div>
+      <div class="caja"><h3>Indicadores del mes</h3><div class="cuerpo"><dl class="malla-lin">
+        <dt>Pedidos facturados</dt><dd>142</dd>
+        <dt>Ticket promedio</dt><dd>${BS(2005)}</dd>
+        <dt>Superficie procesada</dt><dd>1.284 m²</dd>
+        <dt>Aprovechamiento de chapa</dt><dd>84,6 % (antes 62 %)</dd>
+        <dt>Retazos reutilizados</dt><dd>96 m² · ${BS(18400)} ahorrados</dd>
+        <dt>Entregas en fecha</dt><dd>92,6 %</dd>
+        <dt>Rotura en temple</dt><dd>3,9 %</dd>
+        <dt>Margen operativo</dt><dd>28,1 %</dd>
+      </dl></div></div></div>`;
+  }
+}
+
+/* ---------------- REGISTRO DE VISTAS ---------------- */
+const VISTAS_FN={panel:v_panel,cotizador:v_cotizador,pedidos:v_pedidos,agenda:v_agenda,optimizador:v_optimizador,
+  retazos:v_retazos,produccion:v_produccion,horno:v_horno,inventario:v_inventario,importaciones:v_importaciones,
+  aluminio:v_aluminio,caja:v_caja,clientes:v_clientes,personal:v_personal,asistente:v_asistente,reportes:v_reportes};
+const TRAS_FN={cotizador:tras_cotizador,pedidos:tras_pedidos,optimizador:tras_optimizador,retazos:tras_retazos,
+  inventario:tras_inventario,asistente:tras_asistente,reportes:tras_reportes};
+
+/* ---------------- ARRANQUE ---------------- */
+pintarUsuarios();
+
+</script>
+</body>
+</html>

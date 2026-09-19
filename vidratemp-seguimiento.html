@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguimiento de su pedido · VIDRATEMP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--filo:#1E8E7E;--filo-cl:#57C7B4;--casco:#0C2229;--horno:#D9702B;--papel:#EFF3F3;--panel:#fff;
+  --linea:#D2DBDB;--linea-f:#B4C1C1;--tinta:#13252B;--tinta-2:#5A6E73}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --papel:#0E1C21;--panel:#132A31;--linea:#23414A;--linea-f:#33555F;--tinta:#E6EFEF;--tinta-2:#93A8AD}}
+:root[data-theme="dark"]{--papel:#0E1C21;--panel:#132A31;--linea:#23414A;--tinta:#E6EFEF;--tinta-2:#93A8AD}
+*{box-sizing:border-box}
+body{margin:0;background:var(--papel);color:var(--tinta);font-family:'Archivo',system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;line-height:1.5}
+.cinta{background:var(--casco);color:#fff;padding:18px 20px}
+.cinta .caja{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.cinta b{font-size:19px;letter-spacing:-.02em}
+.cinta span{font-family:'Archivo Narrow';font-size:12.5px;color:#7FB0AC}
+.cinta .der{margin-left:auto;font-family:'Archivo Narrow';font-size:12.5px;color:#7FB0AC}
+main{max-width:760px;margin:0 auto;padding:20px 20px 60px}
+.hero{background:var(--panel);border:1px solid var(--linea);border-radius:5px;padding:22px;margin-bottom:14px}
+.hero .cod{font-family:'Archivo Narrow';font-size:13px;color:var(--tinta-2)}
+.hero h1{margin:4px 0 2px;font-size:27px;font-weight:600;letter-spacing:-.02em}
+.hero .sub{color:var(--tinta-2);font-family:'Archivo Narrow';font-size:14px}
+.vidrio{margin:20px 0 6px;position:relative;height:96px;border:2px solid var(--linea-f);border-radius:3px;overflow:hidden;
+  background:repeating-linear-gradient(45deg,transparent,transparent 9px,rgba(19,37,43,.035) 9px,rgba(19,37,43,.035) 10px)}
+.vidrio i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,rgba(30,142,126,.28),rgba(87,199,180,.42));
+  border-right:3px solid var(--filo);transition:width 1s cubic-bezier(.4,0,.2,1)}
+.vidrio em{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-weight:600;font-size:15px}
+@media (prefers-reduced-motion:reduce){.vidrio i{transition:none}}
+.etapas{display:flex;justify-content:space-between;font-family:'Archivo Narrow';font-size:11px;color:var(--tinta-2);margin-bottom:14px}
+.llegada{display:flex;gap:14px;align-items:center;padding:14px;border:1px solid var(--linea);border-left:3px solid var(--filo);border-radius:4px;background:var(--panel)}
+.llegada .gran{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.llegada p{margin:2px 0 0;font-family:'Archivo Narrow';font-size:12.5px;color:var(--tinta-2)}
+.caja2{background:var(--panel);border:1px solid var(--linea);border-radius:5px;margin-bottom:14px}
+.caja2 h2{margin:0;padding:13px 16px;font-size:15px;font-weight:600;border-bottom:1px solid var(--linea)}
+.caja2 .cuerpo{padding:16px}
+.paso{display:grid;grid-template-columns:28px 1fr auto;gap:12px;padding-bottom:18px;position:relative}
+.paso:not(:last-child):before{content:'';position:absolute;left:13px;top:26px;bottom:0;width:2px;background:var(--linea)}
+.paso.hecho:not(:last-child):before{background:var(--filo)}
+.bolita{width:26px;height:26px;border-radius:50%;border:2px solid var(--linea);background:var(--panel);display:grid;place-items:center;font-size:12px;z-index:1}
+.paso.hecho .bolita{background:var(--filo);border-color:var(--filo);color:#fff}
+.paso.activo .bolita{background:var(--horno);border-color:var(--horno);color:#fff}
+.paso b{font-size:14px}.paso span{display:block;font-family:'Archivo Narrow';font-size:12.5px;color:var(--tinta-2)}
+.paso .cuando{font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2);white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-family:'Archivo Narrow';font-size:13.5px}
+th{text-align:left;color:var(--tinta-2);font-weight:600;padding:7px 16px;border-bottom:1px solid var(--linea);font-size:12.5px}
+td{padding:9px 16px;border-bottom:1px solid var(--linea)}
+td.der,th.der{text-align:right}
+tr:last-child td{border-bottom:none}
+.lin{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-family:'Archivo Narrow';font-size:13.5px}
+.lin dt{color:var(--tinta-2)}.lin dd{margin:0;text-align:right;font-weight:600}
+.btn{border:none;border-radius:4px;padding:11px 16px;font-weight:600;font-size:14px;background:var(--filo);color:#fff;cursor:pointer}
+.btn.sec{background:transparent;border:1px solid var(--linea-f);color:var(--tinta)}
+.selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.selector button{border:1px solid var(--linea-f);background:var(--panel);border-radius:3px;padding:7px 11px;font-size:12.5px;font-family:'Archivo Narrow';cursor:pointer}
+.selector button.on{border-color:var(--filo);background:rgba(30,142,126,.1);color:var(--filo);font-weight:600}
+.pie{text-align:center;color:var(--tinta-2);font-family:'Archivo Narrow';font-size:12.5px;margin-top:26px}
+@media (max-width:560px){.hero h1{font-size:22px}.llegada{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="cinta"><div class="caja">
+  <b>VIDRATEMP</b><span>Vitrotemp Ltda. · La Paz</span>
+  <span class="der">c. Ponsnansky 1143 · +591 2 2456 780</span>
+</div></div>
+<main>
+  <div class="selector" id="selector"></div>
+  <div id="contenido"></div>
+  <p class="pie">Este enlace es personal y se actualiza solo. Ante cualquier duda escríbanos por WhatsApp al +591 7 6543 210.</p>
+</main>
+
+<script>
+const PEDIDOS={
+ 'PD-2609':{cli:'Constructora Illimani',etapa:4,creado:'2026-09-17T09:12',entrega:'2026-09-18T16:00',total:14860,
+   piezas:[{d:'Puerta de vidrio hall',v:'Float incoloro 8 mm templado',m:'1200 × 2100 mm',c:6},
+           {d:'Fijo lateral con perforaciones',v:'Float incoloro 8 mm templado',m:'900 × 2100 mm',c:4}],
+   sellos:['17/09 09:12','17/09 10:40','17/09 14:05','17/09 17:20','18/09 08:10','','','']},
+ 'PD-2611':{cli:'Box & Baños La Paz',etapa:6,creado:'2026-09-16T10:05',entrega:'2026-09-18T12:00',total:9380,
+   piezas:[{d:'Hoja de box con entalles',v:'Float incoloro 8 mm templado',m:'700 × 1900 mm',c:8}],
+   sellos:['16/09 10:05','16/09 11:20','16/09 15:00','17/09 09:30','17/09 11:15','17/09 16:40','18/09 08:50','']},
+ 'PD-2613':{cli:'Hotel Presidente',etapa:7,creado:'2026-09-15T16:30',entrega:'2026-09-18T10:00',total:22400,
+   piezas:[{d:'Paño de fachada',v:'Reflectivo plata 6 mm templado',m:'1500 × 2000 mm',c:10}],
+   sellos:['15/09 16:30','15/09 17:10','16/09 08:20','16/09 12:00','16/09 15:30','17/09 10:00','17/09 15:40','18/09 09:20']}};
+const ETAPAS=[
+ {t:'Pedido confirmado',d:'Recibimos su pedido y reservamos el vidrio',ic:'✓'},
+ {t:'Vidrio asignado',d:'Se separó la chapa en el taller',ic:'▣'},
+ {t:'Corte',d:'Su medida se corta según el plan de corte',ic:'✂'},
+ {t:'Pulido de canto',d:'Cantos pulidos, listos para el horno',ic:'◇'},
+ {t:'Lavado',d:'Lavado y secado antes del temple',ic:'≈'},
+ {t:'Templado',d:'Horno a 700 °C y enfriamiento controlado',ic:'♨'},
+ {t:'Control de calidad',d:'Revisión de planitud, cantos y medidas',ic:'◉'},
+ {t:'Listo para entrega',d:'Embalado en caballete, esperando el vehículo',ic:'★'}];
+
+let ACTUAL='PD-2609';
+function pintar(){
+  document.getElementById('selector').innerHTML = Object.keys(PEDIDOS).map(k=>
+    `<button class="${k===ACTUAL?'on':''}" onclick="ACTUAL='${k}';pintar()">${k} · ${PEDIDOS[k].cli}</button>`).join('')
+    + '<span style="font-family:\'Archivo Narrow\';font-size:12px;color:var(--tinta-2);align-self:center">← ejemplos de enlace enviado al cliente</span>';
+
+  const p=PEDIDOS[ACTUAL], e=p.etapa, pct=((e+1)/ETAPAS.length)*100;
+  const listo = e>=ETAPAS.length-1;
+  document.getElementById('contenido').innerHTML=`
+  <div class="hero">
+    <div class="cod">Pedido ${ACTUAL} · ${p.cli}</div>
+    <h1>${listo?'Su vidrio está listo':ETAPAS[e].t}</h1>
+    <div class="sub">${listo?'Lo entregamos hoy en la dirección acordada.':ETAPAS[e].d}</div>
+    <div class="vidrio"><i style="width:${pct}%"></i><em>${Math.round(pct)} % del proceso</em></div>
+    <div class="etapas"><span>Confirmado</span><span>Corte</span><span>Temple</span><span>Entrega</span></div>
+    <div class="llegada">
+      <div><div class="gran">${new Date(p.entrega).toLocaleDateString('es-BO',{weekday:'long',day:'2-digit',month:'long'})}</div>
+        <p>Entrega comprometida a las ${new Date(p.entrega).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false})} · confirmada con la capacidad real del taller</p></div>
+      <button class="btn" style="margin-left:auto" onclick="alert('Se abriría WhatsApp con el vendedor asignado.')">Escribir al vendedor</button>
+    </div>
+  </div>
+
+  <div class="caja2"><h2>Avance de su pedido</h2><div class="cuerpo">
+    ${ETAPAS.map((x,i)=>`<div class="paso ${i<e?'hecho':(i===e?'activo':'')}">
+      <div class="bolita">${i<e?'✓':x.ic}</div>
+      <div><b>${x.t}</b><span>${x.d}</span></div>
+      <div class="cuando">${p.sellos[i]||'—'}</div></div>`).join('')}
+  </div></div>
+
+  <div class="caja2"><h2>Detalle de las piezas</h2>
+    <table><thead><tr><th>Pieza</th><th>Medida</th><th class="der">Cantidad</th></tr></thead>
+    <tbody>${p.piezas.map(x=>`<tr><td><b>${x.d}</b><br><span style="color:var(--tinta-2)">${x.v}</span></td>
+      <td>${x.m}</td><td class="der">${x.c}</td></tr>`).join('')}</tbody></table></div>
+
+  <div class="caja2"><h2>Resumen</h2><div class="cuerpo">
+    <dl class="lin">
+      <dt>Pedido registrado</dt><dd>${new Date(p.creado).toLocaleDateString('es-BO')} ${new Date(p.creado).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false})}</dd>
+      <dt>Total con IVA</dt><dd>Bs ${p.total.toLocaleString('es-BO',{minimumFractionDigits:2})}</dd>
+      <dt>Anticipo recibido</dt><dd>Bs ${(p.total/2).toLocaleString('es-BO',{minimumFractionDigits:2})}</dd>
+      <dt>Saldo contra entrega</dt><dd>Bs ${(p.total/2).toLocaleString('es-BO',{minimumFractionDigits:2})}</dd>
+      <dt>Retiro o envío</dt><dd>Envío con vehículo propio</dd>
+    </dl>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn sec" onclick="alert('Se descargaría la proforma en PDF.')">Ver proforma</button>
+      <button class="btn sec" onclick="alert('Se avisaría al vendedor que desea cambiar la fecha.')">Cambiar fecha de entrega</button>
+    </div>
+  </div></div>`;
+}
+pintar();
+</script>
+</body>
+</html>

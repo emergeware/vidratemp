@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>VIDRATEMP Móvil · Almacén y planta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --filo:#1E8E7E; --filo-osc:#12655A; --casco:#0C2229; --horno:#D9702B; --rotura:#B23A2F;
+  --papel:#EFF3F3; --panel:#FFFFFF; --linea:#D2DBDB; --linea-fuerte:#B4C1C1; --tinta:#13252B; --tinta-2:#5A6E73;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --papel:#0E1C21; --panel:#132A31; --linea:#23414A; --linea-fuerte:#33555F; --tinta:#E6EFEF; --tinta-2:#93A8AD;}}
+:root[data-theme="dark"]{--papel:#0E1C21;--panel:#132A31;--linea:#23414A;--tinta:#E6EFEF;--tinta-2:#93A8AD}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0C2229}
+body{font-family:'Archivo',system-ui,sans-serif;color:var(--tinta);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+
+/* --- marco de teléfono para escritorio --- */
+.escenario{min-height:100vh;display:grid;place-items:center;padding:26px;
+  background:radial-gradient(ellipse at 50% 0%,#14454F 0%,#0C2229 62%)}
+.telefono{width:394px;height:812px;background:var(--papel);border-radius:34px;overflow:hidden;position:relative;
+  box-shadow:0 0 0 11px #0A1A20,0 0 0 13px #24444D,0 26px 60px rgba(0,0,0,.55);display:flex;flex-direction:column}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:132px;height:24px;background:#0A1A20;border-radius:0 0 14px 14px;z-index:30}
+.rotulo{position:fixed;left:26px;top:26px;color:#7FB0AC;font-family:'Archivo Narrow';font-size:13px;max-width:240px;line-height:1.5}
+.rotulo b{color:#fff;display:block;font-family:'Archivo';font-size:17px;margin-bottom:5px}
+@media (max-width:900px){
+  .escenario{padding:0;display:block;background:var(--papel)}
+  .telefono{width:100%;height:100vh;border-radius:0;box-shadow:none}
+  .notch,.rotulo{display:none}
+}
+
+/* --- estructura --- */
+.cabecera{background:var(--casco);color:#fff;padding:32px 16px 12px;flex:0 0 auto}
+.cabecera .sup{display:flex;align-items:center;gap:8px;font-family:'Archivo Narrow';font-size:12px;color:#7FB0AC}
+.cabecera .sup .der{margin-left:auto}
+.cabecera h1{margin:6px 0 0;font-size:19px;font-weight:600;letter-spacing:-.01em}
+.cabecera p{margin:2px 0 0;font-size:12.5px;color:#8FB4B8;font-family:'Archivo Narrow'}
+.lienzo{flex:1;overflow-y:auto;padding:14px;padding-bottom:22px}
+.barra-tab{flex:0 0 auto;background:var(--panel);border-top:1px solid var(--linea);display:grid;grid-template-columns:repeat(5,1fr);padding:6px 4px 10px}
+.barra-tab button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tinta-2);font-size:10.5px;font-family:'Archivo Narrow';padding:4px 0}
+.barra-tab button .ic{font-size:18px;line-height:1}
+.barra-tab button.on{color:var(--filo);font-weight:600}
+
+.tarjeta{background:var(--panel);border:1px solid var(--linea);border-radius:4px;margin-bottom:10px;overflow:hidden}
+.tarjeta h3{margin:0;padding:11px 13px;font-size:13.5px;border-bottom:1px solid var(--linea);display:flex;align-items:center;gap:8px}
+.tarjeta h3 .der{margin-left:auto;font-weight:400;font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2)}
+.tarjeta .cuerpo{padding:13px}
+.eti{display:inline-block;font-size:11px;font-family:'Archivo Narrow';font-weight:600;padding:2px 7px;border-radius:2px;border:1px solid}
+.e-ok{color:var(--filo-osc);border-color:rgba(30,142,126,.4);background:rgba(30,142,126,.1)}
+.e-cal{color:#9C4D14;border-color:rgba(217,112,43,.45);background:rgba(217,112,43,.12)}
+.e-mal{color:var(--rotura);border-color:rgba(178,58,47,.4);background:rgba(178,58,47,.1)}
+.e-gris{color:var(--tinta-2);border-color:var(--linea-fuerte)}
+.btn{border:none;border-radius:4px;padding:12px 14px;font-weight:600;font-size:14px;background:var(--filo);color:#fff;width:100%}
+.btn:active{background:var(--filo-osc)}
+.btn.sec{background:transparent;border:1px solid var(--linea-fuerte);color:var(--tinta)}
+.btn.calor{background:var(--horno)}
+.btn.rojo{background:var(--rotura)}
+.btn.chico{padding:8px 10px;font-size:12.5px;width:auto}
+.fila{display:flex;gap:8px}
+.campo{margin-bottom:10px}
+.campo label{display:block;font-size:11.5px;color:var(--tinta-2);font-family:'Archivo Narrow';margin-bottom:4px}
+.campo input,.campo select{width:100%;border:1px solid var(--linea-fuerte);border-radius:4px;padding:11px;background:var(--panel)}
+.campo input:focus,.campo select:focus{outline:none;border-color:var(--filo);box-shadow:0 0 0 3px rgba(30,142,126,.15)}
+.lista-lin{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-family:'Archivo Narrow';font-size:13px}
+.lista-lin dt{color:var(--tinta-2)}
+.lista-lin dd{margin:0;text-align:right;font-weight:600}
+.tarea{display:flex;gap:11px;align-items:center;padding:11px 13px;border-bottom:1px solid var(--linea)}
+.tarea:last-child{border-bottom:none}
+.tarea .ico{width:34px;height:34px;border-radius:4px;display:grid;place-items:center;font-size:16px;flex:0 0 auto}
+.tarea b{font-size:13.5px;display:block}
+.tarea span{font-size:12px;color:var(--tinta-2);font-family:'Archivo Narrow'}
+.tarea .fin{margin-left:auto;text-align:right}
+
+/* --- lector --- */
+.lector{aspect-ratio:1/1;background:#081419;border-radius:6px;position:relative;overflow:hidden;display:grid;place-items:center;margin-bottom:12px}
+.lector .marco{width:62%;height:62%;border:2px solid rgba(87,199,180,.85);border-radius:6px;position:relative}
+.lector .marco:before,.lector .marco:after{content:'';position:absolute;width:100%;height:100%;border:6px solid transparent}
+.lector .barrido{position:absolute;left:0;right:0;height:2px;background:#57C7B4;box-shadow:0 0 12px #57C7B4;animation:barre 2.4s linear infinite}
+@keyframes barre{0%{top:19%}50%{top:81%}100%{top:19%}}
+@media (prefers-reduced-motion:reduce){.lector .barrido{animation:none;top:50%}}
+.lector p{position:absolute;bottom:12px;color:#7FB0AC;font-family:'Archivo Narrow';font-size:12px;text-align:center;width:100%;margin:0}
+
+.hoja{position:absolute;inset:0;background:rgba(12,34,41,.6);display:none;align-items:flex-end;z-index:40}
+.hoja.on{display:flex}
+.hoja .panel{background:var(--panel);width:100%;border-radius:14px 14px 0 0;padding:16px;max-height:86%;overflow-y:auto}
+.hoja .asa{width:40px;height:4px;background:var(--linea-fuerte);border-radius:2px;margin:0 auto 12px}
+.aviso{display:flex;gap:9px;padding:10px 12px;border:1px solid var(--linea);border-left:3px solid var(--horno);border-radius:4px;background:var(--panel);margin-bottom:10px}
+.aviso.verde{border-left-color:var(--filo)} .aviso.rojo{border-left-color:var(--rotura)}
+.aviso b{font-size:13px} .aviso p{margin:2px 0 0;font-size:12px;color:var(--tinta-2);font-family:'Archivo Narrow'}
+.toast{position:absolute;left:14px;right:14px;bottom:80px;background:var(--casco);color:#fff;padding:12px 14px;border-radius:5px;font-size:13px;z-index:50;
+  border-left:3px solid #57C7B4;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+.contador{display:flex;align-items:center;gap:9px}
+.contador button{width:34px;height:34px;border-radius:4px;border:1px solid var(--linea-fuerte);background:var(--panel);font-size:17px}
+.contador input{width:56px;text-align:center;border:1px solid var(--linea-fuerte);border-radius:4px;padding:8px 0}
+.progreso{height:5px;background:var(--linea);border-radius:3px;overflow:hidden;margin:8px 0}
+.progreso i{display:block;height:100%;background:var(--filo)}
+</style>
+</head>
+<body>
+<div class="escenario">
+  <div class="rotulo"><b>VIDRATEMP Móvil</b>Aplicación de almacén y planta. Recepción de contenedor, traslados, retazos con ubicación y avance de producción, con lectura de código.</div>
+  <div class="telefono">
+    <div class="notch"></div>
+    <div class="cabecera">
+      <div class="sup"><span>VIDRATEMP · Vitrotemp Ltda.</span><span class="der" id="reloj">09:40</span></div>
+      <h1 id="tit">Buen día, Elena</h1>
+      <p id="sub">Almacén de importación · turno mañana</p>
+    </div>
+    <div class="lienzo" id="lienzo"></div>
+    <nav class="barra-tab" id="tabs"></nav>
+    <div class="hoja" id="hoja" onclick="if(event.target===this)cerrarHoja()"><div class="panel" id="hojaPanel"></div></div>
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* ===================== DATOS ===================== */
+const BS=n=>'Bs '+n.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+const M2=n=>n.toFixed(2).replace('.',',')+' m²';
+const CAT={
+ FL04I:{nom:'Float incoloro 4 mm',precio:98},FL05I:{nom:'Float incoloro 5 mm',precio:121},
+ FL06I:{nom:'Float incoloro 6 mm',precio:148},FL08I:{nom:'Float incoloro 8 mm',precio:212},
+ FL06B:{nom:'Float bronce 6 mm',precio:172},ES04I:{nom:'Espejo 4 mm',precio:178},
+ RF06P:{nom:'Reflectivo plata 6 mm',precio:236},LM33I:{nom:'Laminado 3+3',precio:318}};
+const CHAPA={a:3300,b:2140};
+
+let RETAZOS=[
+ {id:'RZ-0341',cat:'FL06I',a:1480,b:920,ubic:'S-A-03'},
+ {id:'RZ-0347',cat:'FL08I',a:1620,b:1180,ubic:'S-B-01'},
+ {id:'RZ-0352',cat:'FL04I',a:2100,b:640,ubic:'S-A-01'},
+ {id:'RZ-0355',cat:'FL05I',a:1260,b:1100,ubic:'S-A-05'},
+ {id:'RZ-0358',cat:'FL06B',a:1180,b:900,ubic:'S-B-04'},
+ {id:'RZ-0362',cat:'FL08I',a:2240,b:780,ubic:'S-B-01'}];
+try{const g=localStorage.getItem('vdt_retazos'); if(g) RETAZOS=JSON.parse(g);}catch(e){}
+const guardar=()=>{try{localStorage.setItem('vdt_retazos',JSON.stringify(RETAZOS));}catch(e){}};
+
+const RECEPCION={oc:'OC-2026-021',cont:'TCLU 998106-4',prov:'Sanxin Glass · Guangzhou',
+ items:[{cat:'FL05I',esperado:200,contado:0,roto:0},{cat:'RF06P',esperado:60,contado:0,roto:0},{cat:'ES04I',esperado:80,contado:0,roto:0}]};
+const TRASLADOS=[
+ {id:'TR-0118',cat:'FL06I',chapas:12,de:'A-A3',a:'V-A3',estado:'Pendiente',motivo:'Bajo mínimo en vidriería'},
+ {id:'TR-0119',cat:'FL08I',chapas:8,de:'A-A4',a:'V-A4',estado:'Pendiente',motivo:'Pedido PD-2609'},
+ {id:'TR-0117',cat:'ES04I',chapas:6,de:'A-C2',a:'V-C2',estado:'Completado',motivo:'Pedido PD-2612'}];
+const DESPACHOS=[
+ {id:'PD-2613',cli:'Hotel Presidente',piezas:10,m2:44.1,zona:'Centro',hora:'10:00',estado:'Listo'},
+ {id:'PD-2611',cli:'Box & Baños La Paz',piezas:8,m2:16.2,zona:'Miraflores',hora:'12:00',estado:'En control'}];
+const ETAPAS=['Corte','Pulido','Lavado','Temple','Control de calidad','Listo para entrega'];
+const ENPLANTA=[{id:'PD-2609',cli:'Constructora Illimani',etapa:'Temple',piezas:10},
+                {id:'PD-2610',cli:'Aluminios del Sur',etapa:'Corte',piezas:24},
+                {id:'PD-2611',cli:'Box & Baños',etapa:'Control de calidad',piezas:8}];
+
+const TABS=[{id:'inicio',t:'Inicio',ic:'▦'},{id:'leer',t:'Leer',ic:'⊡'},{id:'recepcion',t:'Recepción',ic:'⛴'},
+            {id:'retazos',t:'Retazos',ic:'◧'},{id:'planta',t:'Planta',ic:'⚙'}];
+let TAB='inicio';
+
+/* ===================== NAVEGACIÓN ===================== */
+function pintarTabs(){
+  document.getElementById('tabs').innerHTML=TABS.map(t=>
+    `<button class="${t.id===TAB?'on':''}" onclick="irA('${t.id}')"><span class="ic">${t.ic}</span>${t.t}</button>`).join('');
+}
+function irA(id){ TAB=id; pintarTabs(); document.getElementById('lienzo').innerHTML=PAGINAS[id]();
+  const c={inicio:['Buen día, Elena','Almacén de importación · turno mañana'],
+    leer:['Lector de códigos','Apunte al código de la chapa, del retazo o del pedido'],
+    recepcion:['Recepción de contenedor','Conferencia contra factura del proveedor'],
+    retazos:['Depósito de sobras','Alta, búsqueda y ubicación de retazos'],
+    planta:['Avance de planta','Etapas de producción y despacho']}[id];
+  document.getElementById('tit').textContent=c[0]; document.getElementById('sub').textContent=c[1];
+  document.getElementById('lienzo').scrollTop=0;
+}
+function avisar(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');
+  clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2600);}
+function hoja(html){document.getElementById('hojaPanel').innerHTML='<div class="asa"></div>'+html;document.getElementById('hoja').classList.add('on');}
+function cerrarHoja(){document.getElementById('hoja').classList.remove('on');}
+
+/* ===================== INICIO ===================== */
+function p_inicio(){
+  const pend=TRASLADOS.filter(t=>t.estado==='Pendiente').length;
+  return `
+  <div class="aviso"><div><b>Contenedor ${RECEPCION.cont} en puerta</b>
+    <p>${RECEPCION.items.reduce((s,i)=>s+i.esperado,0)} chapas por conferir · ${RECEPCION.prov}</p></div></div>
+  <div class="tarjeta"><h3>Tareas del turno<span class="der">4 pendientes</span></h3>
+    <div class="tarea" onclick="irA('recepcion')">
+      <div class="ico" style="background:rgba(217,112,43,.14);color:var(--horno)">⛴</div>
+      <div><b>Conferir recepción ${RECEPCION.oc}</b><span>340 chapas · contra factura</span></div>
+      <div class="fin"><span class="eti e-cal">ahora</span></div></div>
+    <div class="tarea" onclick="irA('leer')">
+      <div class="ico" style="background:rgba(30,142,126,.14);color:var(--filo)">⇄</div>
+      <div><b>${pend} traslados al taller</b><span>Vidrio bajo mínimo en vidriería</span></div>
+      <div class="fin"><span class="eti e-ok">hoy</span></div></div>
+    <div class="tarea" onclick="irA('retazos')">
+      <div class="ico" style="background:rgba(19,37,43,.08)">◧</div>
+      <div><b>Registrar 3 retazos del plan de corte</b><span>Mesa 1 · pedido PD-2610</span></div>
+      <div class="fin"><span class="eti e-gris">turno</span></div></div>
+    <div class="tarea" onclick="irA('planta')">
+      <div class="ico" style="background:rgba(30,142,126,.14);color:var(--filo)">▣</div>
+      <div><b>Despachar PD-2613</b><span>Hotel Presidente · 10:00</span></div>
+      <div class="fin"><span class="eti e-ok">10:00</span></div></div>
+  </div>
+  <div class="fila" style="margin-bottom:10px">
+    <div class="tarjeta" style="flex:1;margin:0"><div class="cuerpo">
+      <div style="font-family:'Archivo Narrow';font-size:11.5px;color:var(--tinta-2)">Chapas en almacén</div>
+      <div style="font-size:25px;font-weight:600">1.096</div></div></div>
+    <div class="tarjeta" style="flex:1;margin:0"><div class="cuerpo">
+      <div style="font-family:'Archivo Narrow';font-size:11.5px;color:var(--tinta-2)">Retazos útiles</div>
+      <div style="font-size:25px;font-weight:600">${RETAZOS.length}</div></div></div>
+  </div>
+  <div class="tarjeta"><h3>Alertas de reposición</h3>
+    <div class="cuerpo">
+      <dl class="lista-lin">
+        <dt>Float incoloro 8 mm</dt><dd style="color:var(--rotura)">9 de 16</dd>
+        <dt>Reflectivo plata 6 mm</dt><dd style="color:var(--horno)">5 de 8</dd>
+        <dt>Espejo 4 mm</dt><dd>14 de 10</dd>
+      </dl>
+      <button class="btn sec" style="margin-top:11px" onclick="avisar('Solicitud enviada a dirección')">Solicitar importación</button>
+    </div></div>`;
+}
+
+/* ===================== LECTOR ===================== */
+const CODIGOS=[
+ {t:'chapa',cod:'CH-FL06I-0442',cat:'FL06I',ubic:'A-A3 · fila 2',detalle:'Chapa completa 3300 × 2140 mm · lote OC-2026-019'},
+ {t:'retazo',cod:'RZ-0347',cat:'FL08I',ubic:'S-B-01',detalle:'Retazo 1620 × 1180 mm · disponible'},
+ {t:'pedido',cod:'PD-2610',cat:'FL06I',ubic:'Mesa 1',detalle:'Aluminios del Sur · 24 piezas · etapa Corte'},
+ {t:'estante',cod:'S-A-05',cat:'',ubic:'S-A-05',detalle:'Estante de sobras · 4 retazos registrados'}];
+function p_leer(){
+  return `
+  <div class="lector"><div class="marco"></div><div class="barrido"></div>
+    <p>Enfoque el código QR o de barras</p></div>
+  <button class="btn" onclick="leer()">Simular lectura</button>
+  <p style="font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2);text-align:center;margin:10px 0 14px">
+    En el equipo real se usa la cámara o la pistola lectora. Aquí se simula una lectura al azar.</p>
+  <div class="tarjeta"><h3>Últimas lecturas del turno</h3>
+    <div class="tarea"><div class="ico" style="background:rgba(30,142,126,.14);color:var(--filo)">⇄</div>
+      <div><b>CH-FL06I-0431</b><span>Traslado A-A3 → V-A3 · 08:12</span></div></div>
+    <div class="tarea"><div class="ico" style="background:rgba(19,37,43,.08)">✂</div>
+      <div><b>CH-FL08I-0388</b><span>Salida a corte · PD-2609 · 07:50</span></div></div>
+    <div class="tarea"><div class="ico" style="background:rgba(178,58,47,.12);color:var(--rotura)">✕</div>
+      <div><b>PD-2609 · 2 piezas</b><span>Rotura en temple · 07:31</span></div></div>
+  </div>`;
+}
+function leer(){
+  const c=CODIGOS[Math.floor(Math.random()*CODIGOS.length)];
+  const acciones={
+    chapa:[['Salida a corte','salidaCorte'],['Traslado a vidriería','traslado'],['Registrar rotura','rotura']],
+    retazo:[['Usar en un pedido','usarRetazo'],['Cambiar ubicación','mover'],['Dar de baja','rotura']],
+    pedido:[['Avanzar etapa','avanzar'],['Registrar rotura','rotura'],['Marcar despachado','despachar']],
+    estante:[['Ver contenido','verEstante'],['Registrar retazo aquí','altaRetazo']]}[c.t];
+  hoja(`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="width:44px;height:44px;border-radius:5px;background:var(--casco);color:#57C7B4;display:grid;place-items:center;font-size:20px">⊡</div>
+      <div><b style="font-size:16px">${c.cod}</b>
+      <div style="font-family:'Archivo Narrow';font-size:12.5px;color:var(--tinta-2)">${c.cat?CAT[c.cat].nom+' · ':''}${c.detalle}</div></div>
+    </div>
+    <dl class="lista-lin" style="margin-bottom:14px">
+      <dt>Tipo</dt><dd>${c.t}</dd><dt>Ubicación</dt><dd>${c.ubic}</dd>
+      <dt>Leído</dt><dd>${new Date().toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false})}</dd></dl>
+    ${acciones.map(a=>`<button class="btn ${a[1]==='rotura'?'rojo':(a[1]==='traslado'?'calor':'')}" style="margin-bottom:8px" onclick="${a[1]}('${c.cod}')">${a[0]}</button>`).join('')}
+    <button class="btn sec" onclick="cerrarHoja()">Cerrar</button>`);
+}
+const salidaCorte=c=>{cerrarHoja();avisar(`${c} enviada a mesa de corte · existencias actualizadas`);};
+const traslado=c=>{cerrarHoja();avisar(`${c} trasladada a vidriería`);};
+const avanzar=c=>{cerrarHoja();avisar(`${c} avanzó de etapa · el cliente ya lo ve en su enlace`);};
+const despachar=c=>{cerrarHoja();avisar(`${c} marcado como despachado`);};
+const mover=c=>{cerrarHoja();avisar('Lea el código del nuevo estante para confirmar el cambio');};
+const usarRetazo=c=>{cerrarHoja();avisar(`${c} reservado · se descuenta del depósito de sobras`);};
+const verEstante=c=>{cerrarHoja();irA('retazos');};
+function rotura(c){
+  hoja(`<h3 style="padding:0 0 12px;border:none;font-size:16px">Registrar rotura · ${c}</h3>
+    <div class="campo"><label>Cantidad de piezas</label><input type="number" value="1" min="1"></div>
+    <div class="campo"><label>Momento</label><select><option>Carga del horno</option><option selected>Enfriamiento</option><option>Manipulación</option><option>Transporte</option></select></div>
+    <div class="campo"><label>Causa observada</label><select><option>Estallido en enfriamiento</option><option>Canto mal pulido</option><option>Inclusión de níquel-sulfuro</option><option>Choque térmico</option></select></div>
+    <div class="campo"><label>Fotografía</label>
+      <button class="btn sec" onclick="avisar('Cámara · demostración')">Tomar foto de la rotura</button></div>
+    <button class="btn rojo" onclick="cerrarHoja();avisar('Rotura registrada · se suma al historial del horno')">Registrar rotura</button>
+    <button class="btn sec" style="margin-top:8px" onclick="cerrarHoja()">Cancelar</button>`);
+}
+
+/* ===================== RECEPCIÓN ===================== */
+function p_recepcion(){
+  const tot=RECEPCION.items.reduce((s,i)=>s+i.esperado,0), con=RECEPCION.items.reduce((s,i)=>s+i.contado,0);
+  return `
+  <div class="tarjeta"><h3>${RECEPCION.oc}<span class="der">${RECEPCION.cont}</span></h3>
+    <div class="cuerpo">
+      <dl class="lista-lin"><dt>Proveedor</dt><dd>${RECEPCION.prov}</dd>
+        <dt>Chapas según factura</dt><dd>${tot}</dd><dt>Contadas</dt><dd>${con}</dd></dl>
+      <div class="progreso"><i style="width:${(con/tot)*100}%"></i></div>
+    </div></div>
+  ${RECEPCION.items.map((it,i)=>`
+    <div class="tarjeta"><h3>${CAT[it.cat].nom}<span class="der">factura: ${it.esperado}</span></h3>
+      <div class="cuerpo">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2);flex:1">Chapas contadas</span>
+          <div class="contador">
+            <button onclick="contar(${i},-1)">−</button>
+            <input type="number" value="${it.contado}" onchange="fijar(${i},this.value)">
+            <button onclick="contar(${i},1)">+</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2);flex:1">Rotas en tránsito</span>
+          <div class="contador">
+            <button onclick="contarRoto(${i},-1)">−</button>
+            <input type="number" value="${it.roto}" readonly>
+            <button onclick="contarRoto(${i},1)">+</button>
+          </div>
+        </div>
+        <div style="margin-top:10px">${it.contado===0?'<span class="eti e-gris">sin contar</span>':
+          (it.contado+it.roto===it.esperado?'<span class="eti e-ok">conforme</span>':
+           `<span class="eti e-mal">diferencia de ${it.esperado-it.contado-it.roto} chapas</span>`)}</div>
+      </div></div>`).join('')}
+  <button class="btn" onclick="contarTodo()">Contar todo conforme</button>
+  <button class="btn calor" style="margin-top:8px" onclick="cerrarRecepcion()">Confirmar ingreso al almacén</button>`;
+}
+function contar(i,d){RECEPCION.items[i].contado=Math.max(0,RECEPCION.items[i].contado+d*10);irA('recepcion');}
+function fijar(i,v){RECEPCION.items[i].contado=Math.max(0,+v);irA('recepcion');}
+function contarRoto(i,d){RECEPCION.items[i].roto=Math.max(0,RECEPCION.items[i].roto+d);irA('recepcion');}
+function contarTodo(){RECEPCION.items.forEach(i=>i.contado=i.esperado-i.roto);irA('recepcion');avisar('Conteo completo registrado');}
+function cerrarRecepcion(){
+  const falt=RECEPCION.items.filter(i=>i.contado+i.roto!==i.esperado);
+  if(falt.length){ hoja(`<div class="aviso rojo"><div><b>Hay diferencias contra la factura</b>
+    <p>${falt.map(f=>`${CAT[f.cat].nom}: faltan ${f.esperado-f.contado-f.roto}`).join(' · ')}</p></div></div>
+    <button class="btn rojo" onclick="cerrarHoja();avisar('Recepción cerrada con reclamo al proveedor')">Cerrar con reclamo</button>
+    <button class="btn sec" style="margin-top:8px" onclick="cerrarHoja()">Seguir contando</button>`); return; }
+  avisar('Recepción conforme · existencias del almacén actualizadas');
+}
+
+/* ===================== RETAZOS ===================== */
+function p_retazos(){
+  return `
+  <div class="tarjeta"><h3>¿Sirve un retazo?</h3><div class="cuerpo">
+    <div class="campo"><label>Tipo de vidrio</label><select id="bCat">${Object.keys(CAT).map(k=>`<option value="${k}">${CAT[k].nom}</option>`).join('')}</select></div>
+    <div class="fila"><div class="campo" style="flex:1"><label>Ancho (mm)</label><input id="bA" type="number" value="900"></div>
+      <div class="campo" style="flex:1"><label>Alto (mm)</label><input id="bB" type="number" value="700"></div></div>
+    <button class="btn" onclick="buscar()">Buscar en el depósito</button>
+    <div id="bRes" style="margin-top:11px"></div>
+  </div></div>
+  <div class="tarjeta"><h3>Retazos registrados<span class="der">${RETAZOS.length}</span></h3>
+    ${RETAZOS.map(r=>`<div class="tarea">
+      <div class="ico" style="background:rgba(30,142,126,.12);color:var(--filo)">◧</div>
+      <div><b>${r.id} · ${r.a} × ${r.b}</b><span>${CAT[r.cat].nom}</span></div>
+      <div class="fin"><span class="eti e-ok">${r.ubic}</span>
+        <div style="font-size:11px;color:var(--tinta-2);font-family:'Archivo Narrow';margin-top:2px">${M2(r.a*r.b/1e6)}</div></div>
+    </div>`).join('')}
+  </div>
+  <button class="btn calor" onclick="altaRetazo()">Registrar nuevo retazo</button>`;
+}
+function buscar(){
+  const cat=document.getElementById('bCat').value,a=+document.getElementById('bA').value,b=+document.getElementById('bB').value;
+  const c=RETAZOS.filter(r=>r.cat===cat).map(r=>{
+    const d=r.a>=a&&r.b>=b, g=r.a>=b&&r.b>=a;
+    if(!d&&!g) return null; return {r,g:!d,sobra:(r.a*r.b-a*b)/1e6};}).filter(Boolean).sort((x,y)=>x.sobra-y.sobra);
+  const e=document.getElementById('bRes');
+  if(!c.length){ e.innerHTML=`<div class="aviso rojo"><div><b>No hay retazo que sirva</b>
+    <p>Debe abrirse chapa nueva de ${CAT[cat].nom}. Registre el sobrante al terminar el corte.</p></div></div>`; return; }
+  const m=c[0];
+  e.innerHTML=`<div class="aviso verde"><div><b>Use ${m.r.id}</b>
+    <p>Estante <b>${m.r.ubic}</b> · mide ${m.r.a} × ${m.r.b} mm${m.g?' · colocar la pieza girada':''} · sobran ${M2(m.sobra)}</p></div></div>
+    <button class="btn" onclick="avisar('${m.r.id} reservado para la orden')">Reservar este retazo</button>
+    ${c.length>1?`<p style="font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2);margin:9px 0 0">
+      Otras opciones: ${c.slice(1,3).map(x=>`${x.r.id} (${x.r.ubic})`).join(' · ')}</p>`:''}`;
+}
+function altaRetazo(){
+  cerrarHoja();
+  hoja(`<h3 style="padding:0 0 12px;border:none;font-size:16px">Nuevo retazo</h3>
+    <div class="campo"><label>Tipo de vidrio</label><select id="nCat">${Object.keys(CAT).map(k=>`<option value="${k}">${CAT[k].nom}</option>`).join('')}</select></div>
+    <div class="fila"><div class="campo" style="flex:1"><label>Ancho (mm)</label><input id="nA" type="number" value="1200"></div>
+      <div class="campo" style="flex:1"><label>Alto (mm)</label><input id="nB" type="number" value="600"></div></div>
+    <div class="campo"><label>Ubicación</label><select id="nU">
+      ${['S-A-01','S-A-03','S-A-05','S-B-01','S-B-04','S-C-02'].map(u=>`<option>${u}</option>`).join('')}</select></div>
+    <p style="font-family:'Archivo Narrow';font-size:12px;color:var(--tinta-2);margin:0 0 12px">
+      Lea el código del estante para llenar la ubicación sin escribir. La etiqueta del retazo se imprime en la etiquetadora del taller.</p>
+    <button class="btn" onclick="guardarRetazo()">Registrar e imprimir etiqueta</button>
+    <button class="btn sec" style="margin-top:8px" onclick="cerrarHoja()">Cancelar</button>`);
+}
+function guardarRetazo(){
+  const id='RZ-0'+(370+Math.floor(Math.random()*90));
+  RETAZOS.push({id,cat:document.getElementById('nCat').value,a:+document.getElementById('nA').value,
+    b:+document.getElementById('nB').value,ubic:document.getElementById('nU').value});
+  guardar(); cerrarHoja(); irA('retazos'); avisar(`${id} registrado · etiqueta enviada a impresión`);
+}
+
+/* ===================== PLANTA ===================== */
+function p_planta(){
+  return `
+  <div class="tarjeta"><h3>Pedidos en producción</h3>
+    ${ENPLANTA.map(p=>`<div class="tarea" onclick="avanzarPedido('${p.id}')">
+      <div class="ico" style="background:rgba(217,112,43,.14);color:var(--horno)">${p.etapa==='Temple'?'♨':'⚙'}</div>
+      <div><b>${p.id} · ${p.cli}</b><span>${p.piezas} piezas · ${p.etapa}</span></div>
+      <div class="fin"><span class="eti e-cal">avanzar</span></div></div>`).join('')}
+  </div>
+  <div class="tarjeta"><h3>Despachos de hoy</h3>
+    ${DESPACHOS.map(d=>`<div class="tarea">
+      <div class="ico" style="background:rgba(30,142,126,.14);color:var(--filo)">▣</div>
+      <div><b>${d.id} · ${d.cli}</b><span>${d.piezas} piezas · ${M2(d.m2)} · ${d.zona}</span></div>
+      <div class="fin"><span class="eti ${d.estado==='Listo'?'e-ok':'e-cal'}">${d.hora}</span></div></div>`).join('')}
+    <div class="cuerpo"><button class="btn" onclick="hojaDespacho()">Preparar despacho PD-2613</button></div>
+  </div>
+  <div class="tarjeta"><h3>Horno · turno de hoy</h3><div class="cuerpo">
+    <dl class="lista-lin">
+      <dt>Ciclos completados</dt><dd>6 de 9</dd>
+      <dt>Superficie templada</dt><dd>38,4 m²</dd>
+      <dt>Roturas</dt><dd>0 piezas</dd>
+      <dt>Presión de soplado</dt><dd style="color:var(--horno)">5,4 bar</dd>
+    </dl>
+    <div class="aviso" style="margin:11px 0 0"><div><b>Compresor bajo observación</b>
+      <p>Avisar a mantenimiento si la presión baja de 5,2 bar en el ciclo.</p></div></div>
+    <button class="btn sec" style="margin-top:10px" onclick="rotura('Horno · ciclo actual')">Registrar rotura del ciclo</button>
+  </div></div>`;
+}
+function avanzarPedido(id){
+  const p=ENPLANTA.find(x=>x.id===id), i=ETAPAS.indexOf(p.etapa);
+  hoja(`<h3 style="padding:0 0 12px;border:none;font-size:16px">${p.id} · ${p.cli}</h3>
+    <dl class="lista-lin" style="margin-bottom:14px"><dt>Etapa actual</dt><dd>${p.etapa}</dd>
+      <dt>Siguiente</dt><dd>${ETAPAS[i+1]||'Entregado'}</dd><dt>Piezas</dt><dd>${p.piezas}</dd></dl>
+    <button class="btn" onclick="confirmarAvance('${id}')">Confirmar paso a ${ETAPAS[i+1]||'entrega'}</button>
+    <button class="btn rojo" style="margin-top:8px" onclick="rotura('${id}')">Registrar rotura</button>
+    <button class="btn sec" style="margin-top:8px" onclick="cerrarHoja()">Cancelar</button>`);
+}
+function confirmarAvance(id){
+  const p=ENPLANTA.find(x=>x.id===id), i=ETAPAS.indexOf(p.etapa);
+  if(ETAPAS[i+1]) p.etapa=ETAPAS[i+1];
+  cerrarHoja(); irA('planta'); avisar(`${id} en ${p.etapa} · el cliente lo ve en su enlace`);
+}
+function hojaDespacho(){
+  hoja(`<h3 style="padding:0 0 12px;border:none;font-size:16px">Despacho PD-2613</h3>
+    <p style="font-family:'Archivo Narrow';font-size:12.5px;color:var(--tinta-2);margin:0 0 12px">
+      Lea cada caballete antes de cargar. El cliente recibe el aviso de salida con la hora estimada.</p>
+    ${['Caballete 1 · 4 piezas 1500 × 2000','Caballete 2 · 4 piezas 1500 × 2000','Caballete 3 · 2 piezas 1500 × 2000'].map((c,i)=>
+      `<div class="tarea" style="border:1px solid var(--linea);border-radius:4px;margin-bottom:8px">
+        <div class="ico" style="background:rgba(30,142,126,.12);color:var(--filo)">${i<2?'✓':'⊡'}</div>
+        <div><b>${c.split('·')[0]}</b><span>${c.split('·')[1]}</span></div>
+        <div class="fin"><span class="eti ${i<2?'e-ok':'e-gris'}">${i<2?'cargado':'pendiente'}</span></div></div>`).join('')}
+    <button class="btn" onclick="cerrarHoja();avisar('Despacho confirmado · aviso enviado al cliente')">Confirmar salida del vehículo</button>
+    <button class="btn sec" style="margin-top:8px" onclick="cerrarHoja()">Cerrar</button>`);
+}
+
+/* ===================== REGISTRO DE PÁGINAS ===================== */
+const PAGINAS={inicio:p_inicio,leer:p_leer,recepcion:p_recepcion,retazos:p_retazos,planta:p_planta};
+
+/* ===================== ARRANQUE ===================== */
+setInterval(()=>{document.getElementById('reloj').textContent=new Date().toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});},30000);
+document.getElementById('reloj').textContent=new Date().toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
+pintarTabs(); irA('inicio');
+</script>
+</body>
+</html>
